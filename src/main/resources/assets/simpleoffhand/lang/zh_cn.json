@@ -1,0 +1,6 @@
+{
+  "simpleoffhand.config.modEnabled": "启用模组",
+  "simpleoffhand.config.modEnabled.tooltip": "启用或禁用整个模组。",
+  "simpleoffhand.config.twoHandedItems": "双手物品",
+  "simpleoffhand.config.twoHandedItems.tooltip": "隐藏副手手臂的物品列表。"
+}

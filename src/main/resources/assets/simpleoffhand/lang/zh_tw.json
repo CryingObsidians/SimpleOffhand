@@ -1,0 +1,6 @@
+{
+  "simpleoffhand.config.modEnabled": "啟用模組",
+  "simpleoffhand.config.modEnabled.tooltip": "啟用或停用整個模組。",
+  "simpleoffhand.config.twoHandedItems": "雙手物品",
+  "simpleoffhand.config.twoHandedItems.tooltip": "隱藏副手手臂的物品清單。"
+}

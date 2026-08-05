@@ -1,0 +1,6 @@
+{
+  "simpleoffhand.config.modEnabled": "Enable Mod",
+  "simpleoffhand.config.modEnabled.tooltip": "Enable or disable the entire mod.",
+  "simpleoffhand.config.twoHandedItems": "Two-Handed Items",
+  "simpleoffhand.config.twoHandedItems.tooltip": "Items that hide the offhand arm."
+}
