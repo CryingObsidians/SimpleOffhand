@@ -26,8 +26,6 @@ options.txt
 optionsof.txt
 server.properties
 
-config/
-
 .DS_Store
 Thumbs.db
 desktop.ini
