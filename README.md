@@ -26,8 +26,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 26.2 |
-| NeoForge | 26.2.0.45-beta（loader `4+`） |
+| Minecraft | 26.1.2 |
+| NeoForge | 26.1.2.109（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -66,7 +66,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 实现方式
 
-用一个 Mixin 挂在 `ItemInHandRenderer#submitArmWithItem` 上。原版的空手分支是：
+用一个 Mixin 挂在 `ItemInHandRenderer#renderArmWithItem` 上（26.2 起该方法改名为 `submitArmWithItem`）。原版的空手分支是：
 
 ```java
 if (itemStack.isEmpty()) {
@@ -80,7 +80,12 @@ if (itemStack.isEmpty()) {
 
 ### 相关项目
 
-1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 26.2 的实现。
+1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 26.1.2 的实现。
+
+### 多版本
+
+仓库按 Minecraft 版本分分支，`master` 始终跟随最新版。各版本对应的 NeoForge
+版本坐标与 API 差异见 [docs/VERSIONING.md](docs/VERSIONING.md)。
 
 ---
 
@@ -98,8 +103,8 @@ Exception: while a **map** is held in the main hand, vanilla already renders bot
 
 | | |
 | --- | --- |
-| Minecraft | 26.2 |
-| NeoForge | 26.2.0.45-beta (loader `4+`) |
+| Minecraft | 26.1.2 |
+| NeoForge | 26.1.2.109 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
