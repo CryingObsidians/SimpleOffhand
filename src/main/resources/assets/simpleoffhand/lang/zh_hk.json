@@ -1,6 +1,6 @@
 {
-  "simpleoffhand.config.modEnabled": "開啟模組",
-  "simpleoffhand.config.modEnabled.tooltip": "開啟或關閉整個模組。",
+  "simpleoffhand.config.modEnabled": "啟用模組",
+  "simpleoffhand.config.modEnabled.tooltip": "關閉後，第一人稱手部完全依原版繪製。",
   "simpleoffhand.config.twoHandedItems": "雙手物品",
-  "simpleoffhand.config.twoHandedItems.tooltip": "隱藏副手手臂的物品列表。"
+  "simpleoffhand.config.twoHandedItems.tooltip": "主手持有這些物品時，不再額外繪製空的副手手臂，與原版雙手舉圖的表現一致。"
 }

@@ -1,48 +1,64 @@
 package com.halfinity.config;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * 模组配置文件。
- * 定义所有可配置项，并提供读取配置的静态方法。
+ * 模组配置。
+ *
+ * <p>配置项只在 {@link CommonConfig} 里声明，对外一律通过本类的静态方法读取，
+ * 不把 {@link ModConfigSpec.ConfigValue} 直接抛给调用方。配置界面（{@code ConfigurationScreen}）
+ * 显示的标题和悬浮提示取自翻译键 {@code simpleoffhand.config.*}，也就是
+ * {@code assets/simpleoffhand/lang/} 下的语言文件；而配置文件里的 {@code #} 注释来自
+ * {@link ModConfigSpec.Builder#comment}。</p>
  */
-public class SimpleOffhandConfig {
+public final class SimpleOffhandConfig {
 
-    /**
-     * 配置项定义类。
-     * 所有配置项在此声明并初始化。
-     */
-    public static class CommonConfig {
-        /** 模组总开关，true 表示启用，false 表示禁用 */
+    /** 默认的“双手物品”。主手拿地图时原版会双手举图，所以默认跟着原版走。 */
+    private static final List<String> DEFAULT_TWO_HANDED_ITEMS = List.of("minecraft:filled_map");
+
+    private SimpleOffhandConfig() {
+    }
+
+    /** 配置项声明。 */
+    public static final class CommonConfig {
+
+        /** 模组总开关。 */
         public final ModConfigSpec.ConfigValue<Boolean> modEnabled;
 
-        /** 物品列表，存储为逗号分隔的字符串，如 "minecraft:filled_map,minecraft:shield" */
-        public final ModConfigSpec.ConfigValue<String> twoHandItemsRaw;
+        /** “双手物品”的物品 ID 列表。 */
+        public final ModConfigSpec.ConfigValue<List<? extends String>> twoHandedItems;
 
         CommonConfig(ModConfigSpec.Builder builder) {
-            // 定义总开关配置项，默认值为 true
-            builder.translation("simpleoffhand.config.modEnabled");
             modEnabled = builder
-                    .comment("simpleoffhand.config.modEnabled.tooltip")
+                    .comment("Enable the mod. Set to false to render the first-person hands exactly like vanilla.")
+                    .translation("simpleoffhand.config.modEnabled")
                     .define("modEnabled", true);
 
-            // 定义物品列表配置项，默认值为 "minecraft:filled_map"
-            builder.translation("simpleoffhand.config.twoHandedItems");
-            twoHandItemsRaw = builder
-                    .comment("simpleoffhand.config.twoHandedItems.tooltip")
-                    .define("twoHandItems", "minecraft:filled_map");
+            twoHandedItems = builder
+                    .comment("Item IDs that keep the vanilla offhand behaviour while held in the main hand.",
+                            "When one of these is held in the main hand and the offhand is empty, no extra",
+                            "offhand arm is drawn. This is what vanilla already does for a two-handed map.",
+                            "Format: \"namespace:path\", e.g. \"minecraft:filled_map\".")
+                    .translation("simpleoffhand.config.twoHandedItems")
+                    .defineList(
+                            "twoHandedItems",
+                            DEFAULT_TWO_HANDED_ITEMS,
+                            () -> "minecraft:filled_map",
+                            SimpleOffhandConfig::isValidItemId
+                    );
         }
     }
 
-    /** 配置实例，供外部读取配置值 */
+    /** 配置实例。 */
     public static final CommonConfig COMMON;
 
-    /** 配置规格，用于注册配置到 NeoForge */
+    /** 配置规格，注册到 NeoForge 用。 */
     public static final ModConfigSpec COMMON_SPEC;
 
     static {
@@ -51,22 +67,30 @@ public class SimpleOffhandConfig {
         COMMON_SPEC = pair.getRight();
     }
 
-    /**
-     * 获取模组总开关状态。
-     * @return true 表示模组启用，false 表示禁用
-     */
-    public static boolean isModEnabled() {
+    /** 模组是否启用。 */
+    public static boolean isEnabled() {
         return COMMON.modEnabled.get();
     }
 
     /**
-     * 获取物品 ID 列表。
-     * 将配置中存储的逗号分隔字符串解析为字符串列表返回。
-     * @return 物品 ID 列表，如 ["minecraft:filled_map", "minecraft:shield"]
+     * 判断某个物品是否属于配置里的“双手物品”。
+     *
+     * <p>按注册名（如 {@code minecraft:filled_map}）比较，不去注册表里反查物品实例，
+     * 这样配置里写错的 ID 只会“匹配不上”，不会在渲染线程里抛异常。</p>
+     *
+     * @param stack 待判断的物品，允许传入空栈
+     * @return 该物品在配置列表中返回 true
      */
-    public static List<String> getTwoHandItemList() {
-        String raw = COMMON.twoHandItemsRaw.get().trim();
-        if (raw.isBlank()) return new ArrayList<>();
-        return new ArrayList<>(Arrays.asList(raw.split(",")));
+    public static boolean isTwoHandedItem(ItemStack stack) {
+        if (stack.isEmpty()) {
+            return false;
+        }
+        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        return id != null && COMMON.twoHandedItems.get().contains(id.toString());
+    }
+
+    /** 校验配置里的物品 ID 是否合法，供 {@code defineList} 使用。 */
+    private static boolean isValidItemId(Object entry) {
+        return entry instanceof String id && Identifier.tryParse(id) != null;
     }
 }

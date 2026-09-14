@@ -1,44 +1,61 @@
 package com.halfinity.mixin;
 
 import com.halfinity.config.SimpleOffhandConfig;
-import com.halfinity.event.OffhandArmHideEvent;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.common.NeoForge;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import java.util.List;
-
 /**
- * 混入 ItemInHandRenderer，拦截副手空手臂渲染。
- * 当主手持有配置列表中的物品且副手为空时，跳过副手手臂渲染。
+ * 让空着的副手也画出手臂。
+ *
+ * <p>原版 {@code ItemInHandRenderer#submitArmWithItem} 的空手分支是这样的：</p>
+ *
+ * <pre>{@code
+ * if (itemStack.isEmpty()) {
+ *     if (isMainHand && !player.isInvisible()) {   // ← 只有主手才画
+ *         this.renderPlayerArm(...);
+ *     }
+ * }
+ * }</pre>
+ *
+ * <p>也就是说副手空着时原版什么都不画。本模组就是把这个 {@code isMainHand} 限制去掉，
+ * 于是副手空着时也会画出副手手臂（即副手版 22w13oneblockatatime 的双手可见效果）。</p>
+ *
+ * <p>唯一的例外：主手拿着配置里的“双手物品”（默认 {@code minecraft:filled_map}）时不这么做。
+ * 那种情况下原版自己会走 {@code renderTwoHandedMap}，本来就把两只手都画在地图后面，
+ * 再补一条手臂会和地图叠在一起，所以保持原版行为。</p>
+ *
+ * <p>这里用 {@code @Inject(at = HEAD)} 而不是改写整个方法：只补上原版缺的那一种情况，
+ * 其余分支（有物品、弩、地图、摇手动画等）原封不动地交给原版执行。</p>
  */
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
 
     /**
-     * 在 submitArmWithItem 方法执行前拦截。
-     * 判断是否满足隐藏条件，若满足则跳过渲染或发布事件供其他模组控制。
+     * 原版画裸手臂的方法，这里借它来完成实际渲染，避免把一整套手臂变换抄一遍。
      */
-    @Inject(
-            method = "submitArmWithItem",
-            at = @At("HEAD"),
-            cancellable = true
-    )
-    private void onRenderArmWithEmptyHand(
+    @Shadow
+    private void renderPlayerArm(
+            PoseStack poseStack,
+            SubmitNodeCollector submitNodeCollector,
+            int lightCoords,
+            float inverseArmHeight,
+            float attackValue,
+            HumanoidArm arm
+    ) {
+    }
+
+    @Inject(method = "submitArmWithItem", at = @At("HEAD"))
+    private void simpleoffhand$renderEmptyOffhandArm(
             AbstractClientPlayer player,
             float frameInterp,
             float xRot,
@@ -51,69 +68,35 @@ public abstract class ItemInHandRendererMixin {
             int lightCoords,
             CallbackInfo ci
     ) {
-        // 检查模组总开关
-        if (!SimpleOffhandConfig.isModEnabled()) {
+        // 只接管“副手 + 空手”这一种情况，其余全部交回原版
+        if (hand != InteractionHand.OFF_HAND || !itemStack.isEmpty()) {
             return;
         }
 
-        // 仅当副手为空且玩家可见时处理
-        if (itemStack.isEmpty() && !player.isInvisible()) {
-
-            // 仅处理副手
-            if (hand == InteractionHand.OFF_HAND) {
-                ItemStack mainHand = player.getMainHandItem();
-                if (!mainHand.isEmpty()) {
-                    // 检查主手物品是否在配置列表中
-                    boolean inList = false;
-                    List<String> items = SimpleOffhandConfig.getTwoHandItemList();
-                    for (String id : items) {
-                        try {
-                            Identifier loc = Identifier.parse(id);
-                            Item targetItem = BuiltInRegistries.ITEM.get(loc)
-                                    .map(Holder::value)
-                                    .orElse(null);
-                            if (targetItem != null && mainHand.getItem() == targetItem) {
-                                inList = true;
-                                break;
-                            }
-                        } catch (Exception ignored) {
-                        }
-                    }
-
-                    if (inList) {
-                        // 发布事件，其他模组可监听并取消隐藏
-                        OffhandArmHideEvent event = new OffhandArmHideEvent(player, true);
-                        NeoForge.EVENT_BUS.post(event);
-
-                        // 默认行为：隐藏副手手臂（跳过渲染）
-                        if (!event.isCanceled()) {
-                            return;
-                        }
-                    }
-                }
-            }
-
-            // 执行默认的空手手臂渲染
-            HumanoidArm arm = hand == InteractionHand.MAIN_HAND
-                    ? player.getMainArm()
-                    : player.getMainArm().getOpposite();
-
-            poseStack.pushPose();
-            this.renderPlayerArm(poseStack, submitNodeCollector, lightCoords, inverseArmHeight, attack, arm);
-            poseStack.popPose();
-
-            // 取消原方法，避免重复渲染
-            ci.cancel();
+        if (!SimpleOffhandConfig.isEnabled()) {
+            return;
         }
-    }
 
-    @Shadow
-    private void renderPlayerArm(
-            PoseStack poseStack,
-            SubmitNodeCollector submitNodeCollector,
-            int lightCoords,
-            float inverseArmHeight,
-            float attackValue,
-            HumanoidArm arm
-    ) {}
+        // 原版在望远镜缩放时整个方法的渲染都会被跳过，这里保持一致
+        if (player.isScoping() || player.isInvisible()) {
+            return;
+        }
+
+        // 主手拿着双手物品（默认地图）时保持原版逻辑
+        if (SimpleOffhandConfig.isTwoHandedItem(player.getMainHandItem())) {
+            return;
+        }
+
+        // 位置、换弹高度、挥手动画都交给原版计算，这里只决定“画哪只手”
+        poseStack.pushPose();
+        this.renderPlayerArm(
+                poseStack,
+                submitNodeCollector,
+                lightCoords,
+                inverseArmHeight,
+                attack,
+                player.getMainArm().getOpposite()
+        );
+        poseStack.popPose();
+    }
 }

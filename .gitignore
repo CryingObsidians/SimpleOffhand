@@ -1,45 +1,37 @@
-.gradle/
-build/
-gradle/
-gradlew
-gradlew.bat
-settings.gradle
-
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
-
-.vscode/
-
+# eclipse
+bin
+*.launch
+.settings
+.metadata
 .classpath
 .project
-.settings/
-bin/
 
-run/
-logs/
-crash-reports/
-saves/
-options.txt
-optionsof.txt
-server.properties
+# idea
+out
+*.ipr
+*.iws
+*.iml
+.idea
 
+# vscode
+.vscode
+
+# gradle
+build
+.gradle
+
+# other
+eclipse
+run
+runs
+run-data
+
+repo
+/src/generated/resources/.cache/*
+
+# os / editor
 .DS_Store
 Thumbs.db
 desktop.ini
-
-*.tmp
-*.log
-*.bak
 *.swp
 *~
-
-*.pem
-*.key
-*.pub
-
-*.jar
-*.war
-*.ear
