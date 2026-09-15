@@ -14,6 +14,10 @@ import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
  * <p>本模组改的全是第一人称手部的渲染，因此声明为 {@link Dist#CLIENT}。
  * 这样即使被放进专用服务器，NeoForge 也不会加载它，<br>
  * 也就不会去碰 {@link IConfigScreenFactory}、{@link ConfigurationScreen} 这些只在客户端存在的类。</p>
+ *
+ * <p>配置同样用 {@link ModConfig.Type#CLIENT}，而不是 {@code COMMON}：本模组的配置只影响客户端渲染，
+ * 没有任何一项需要服务器知道。CLIENT 配置只会在客户端加载，配置文件名为
+ * {@code config/simpleoffhand-client.toml}。</p>
  */
 @Mod(value = Simpleoffhand.MODID, dist = Dist.CLIENT)
 public class Simpleoffhand {
@@ -22,7 +26,7 @@ public class Simpleoffhand {
     public static final String MODID = "simpleoffhand";
 
     public Simpleoffhand(ModContainer container) {
-        container.registerConfig(ModConfig.Type.COMMON, SimpleOffhandConfig.COMMON_SPEC);
+        container.registerConfig(ModConfig.Type.CLIENT, SimpleOffhandConfig.CLIENT_SPEC);
 
         // 让模组列表里的“配置”按钮打开自动生成的配置界面
         container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);

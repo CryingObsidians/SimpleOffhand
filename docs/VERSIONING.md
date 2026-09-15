@@ -281,6 +281,69 @@ toolchainVersion=21
 > 切过分支之后留下的旧 jar（例如在 26.2 上看到 `simpleoffhand-1.21.11+*.jar`）会被误当成产物发布，
 > 构建前先 `clean` 一次。
 
+## 配置类型：用 CLIENT，不用 COMMON
+
+本模组的配置注册成 `ModConfig.Type.CLIENT`（`Simpleoffhand.java`）：
+
+```java
+container.registerConfig(ModConfig.Type.CLIENT, SimpleOffhandConfig.CLIENT_SPEC);
+```
+
+理由：这是纯客户端模组（`@Mod(dist = Dist.CLIENT)`），配置项只影响第一人称渲染，
+没有任何一项需要服务器知道。`CLIENT` 的语义正好对应（FML 源码里的注释）：
+
+| | `COMMON` | `CLIENT` |
+| --- | --- | --- |
+| 加载端 | 客户端和服务器都加载 | **只在客户端加载** |
+| 存放位置 | 全局 `config/` | 全局 `config/`（同） |
+| 是否同步 | 不同步 | 不同步（同） |
+| 默认文件名 | `<modid>-common.toml` | **`<modid>-client.toml`** |
+
+注意最后一行：**改类型会改文件名**（`extension()` 就是类型名小写）。
+本项目因此是 `config/simpleoffhand-client.toml`，旧版本留下的
+`simpleoffhand-common.toml` 不会被读取，改名或删掉即可。
+
+顺带一个容易担心的点：`ConfigValue#get()` 在配置尚未加载时会抛 `IllegalStateException`，
+所以"配置没加载完就被渲染代码读到"是危险的。这里不会发生 —— NeoForge 在
+`CommonModLoader.begin()` 里加载配置，顺序是「Registry initialization」→「Config loading」
+→`NeoEventBus.start()`，而渲染远在其后：
+
+```java
+// net/neoforged/neoforge/internal/CommonModLoader.java
+if (!datagen) {
+    ModLoader.runInitTask("Config loading", syncExecutor, periodicTask, () -> {
+        if (FMLEnvironment.getDist() == Dist.CLIENT) {
+            ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.CLIENT, FMLPaths.CONFIGDIR.get());
+        }
+        ConfigTracker.INSTANCE.loadConfigs(ModConfig.Type.COMMON, FMLPaths.CONFIGDIR.get());
+    });
+}
+```
+
+`Type.CLIENT` 在 FML 10.x（1.21.11 用的那代）和 11.x（26.x）里都存在，两条线都能这么写。
+
+## CI：`.github/workflows/build.yml`
+
+工作流在 push / PR / 手动触发时跑两条 job：
+
+- **`build`**：矩阵构建全部四条分支，每条 checkout 到自己的分支，用**自己那档 JDK**
+  （26.x = 25，1.21.11 = 21），Gradle 版本由 `setup-gradle` 从
+  `gradle-wrapper.properties` 里读，不用重复声明。
+- **`validate-wrapper`**：校验 `gradle-wrapper.jar` 的校验和。
+
+两个容易踩的点：
+
+1. **`setup-java` 必须排在 `setup-gradle` 前面**。`setup-gradle` 一执行就会解析并下载
+   Gradle 发行包，那时 `JAVA_HOME` 还是 runner 自带的版本 —— 1.21.11 那条会直接死在
+   `Unsupported class file major version 69`（Gradle 8.8 跑不了 JDK 25）。
+2. **CI 依赖仓库真的装了 GitHub Actions**。它在 fork 或关闭了 Actions 的仓库里**不会运行**，
+   而且**没有网络请求能替你验证这一点** —— 推完之后去仓库的 Actions 标签页看一眼，
+   有绿色勾才算真的通了。如果看到"Workflows aren't being run on this forked repository"
+   或 Actions 被禁用，去 Settings → Actions 里启用。
+
+产物用 `upload-artifact` 传上去（`simpleoffhand-<分支>`）。构建步骤后面有一道断言：
+`build/libs/` 里有且只有一个 jar —— 这正是本地踩过的"跨分支旧 jar 被误当产物"那个坑。
+
 ## 有用的 javadoc 来源
 
 - 26.2.x: https://aldak0.ru/javadoc/26.2.x/

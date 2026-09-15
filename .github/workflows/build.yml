@@ -1,0 +1,97 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+      - "26.2"
+      - "26.1.2"
+      - "1.21.11"
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build (${{ matrix.branch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # JDK 必须和分支自己的构建环境一致，见 docs/VERSIONING.md：
+          # 26.x 全线是 JDK 25（FancyModLoader 11.x 只声明了 Java 25 变体）；
+          # 1.21.11 是 JDK 21，而且 gradle/gradle-daemon-jvm.properties 把
+          # 守护进程的 JVM 钉在 21 上（Gradle 8.8 跑不了 JDK 25）。
+          - branch: master
+            java: "25"
+          - branch: "26.2"
+            java: "25"
+          - branch: "26.1.2"
+            java: "25"
+          - branch: "1.21.11"
+            java: "21"
+
+    steps:
+      - name: Checkout ${{ matrix.branch }}
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ matrix.branch }}
+
+      # 顺序不能反：setup-gradle 会立刻解析并下载 Gradle 发行包，
+      # 那时如果 JAVA_HOME 还是 runner 自带的版本，Gradle 就会用错的 JDK 启动
+      # （1.21.11 那条尤其明显 —— Gradle 8.8 跑在 JDK 25 上直接报
+      #  "Unsupported class file major version 69"）。
+      - name: Set up JDK ${{ matrix.java }}
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+
+      # setup-gradle 读取 gradle/wrapper/gradle-wrapper.properties 里钉的版本，
+      # 所以这里不需要再单独声明 Gradle 版本。
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      - name: Build
+        run: ./gradlew build --no-daemon --stacktrace
+
+      # 产物必须和当前分支对得上（26.2 分支只能是 simpleoffhand-26.2+*.jar）。
+      # 对不上说明 build/libs 里混进了别的分支的旧 jar —— 这正是本地踩过的坑。
+      - name: Check that build/libs holds exactly one jar
+        run: |
+          set -euo pipefail
+          mapfile -t jars < <(find build/libs -maxdepth 1 -name '*.jar' ! -name '*-sources.jar')
+          if [ "${#jars[@]}" -ne 1 ]; then
+            echo "::error::expected exactly 1 jar in build/libs, found ${#jars[@]}"
+            ls -la build/libs
+            exit 1
+          fi
+          echo "built: ${jars[0]}"
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v7
+        with:
+          name: simpleoffhand-${{ matrix.branch }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+
+  validate-wrapper:
+    name: validate gradle wrapper
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Validate wrapper
+        uses: gradle/actions/wrapper-validation@v5
