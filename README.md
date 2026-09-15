@@ -4,6 +4,8 @@
 
 **中文** | [English](#english)
 
+![build](https://github.com/CryingObsidians/SimpleOffhand/actions/workflows/build.yml/badge.svg)
+
 ---
 
 ## 中文
@@ -35,7 +37,7 @@
 
 ### 配置
 
-配置文件位于 `config/simpleoffhand-common.toml`。游戏内也可以从「模组列表 → SimpleOffhand → 配置」打开自动生成的配置界面。
+配置文件位于 `config/simpleoffhand-client.toml`。游戏内也可以从「模组列表 → SimpleOffhand → 配置」打开自动生成的配置界面。
 
 | 配置项 | 默认值 | 说明 |
 | --- | --- | --- |
@@ -120,7 +122,7 @@ This is a client-side mod that only changes first-person hand rendering — the 
 
 ### Configuration
 
-The config file is `config/simpleoffhand-common.toml`. In game, open it from *Mods → SimpleOffhand → Config*.
+The config file is `config/simpleoffhand-client.toml`. In game, open it from *Mods → SimpleOffhand → Config*.
 
 | Option | Default | Description |
 | --- | --- | --- |
