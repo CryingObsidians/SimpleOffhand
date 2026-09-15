@@ -78,18 +78,7 @@ if (itemStack.isEmpty()) {
 
 ### 多版本
 
-仓库按 Minecraft 版本分分支，`master` 始终跟随最新版（当前为 26.2）：
-
-| 分支 | MC 版本 | 构建环境 |
-| --- | --- | --- |
-| `master` / `26.2` | 26.2 | Gradle 9.6.1 + JDK 25 |
-| `26.1.2` | 26.1.2 | Gradle 9.6.1 + JDK 25 |
-| `1.21.11` | 1.21.11 | Gradle 8.8 + JDK 21 |
-| `1.21.10` | 1.21.10 | Gradle 8.8 + JDK 21 |
-| `1.21.8` | 1.21.8 | Gradle 8.8 + JDK 21 |
-| `1.21.1` | 1.21.1 | Gradle 8.8 + JDK 21 |
-
-各分支对应的 NeoForge 版本坐标、插件版本要求、图标字段差异与 API 差异见
+仓库按 MC 版本分分支，`master` 跟随最新版。分支列表、各版本坐标与技术差异见
 [docs/VERSIONING.md](docs/VERSIONING.md)。
 
 ---
@@ -142,19 +131,9 @@ The jar lands in `build/libs/`. Use `./gradlew runClient` for development.
 
 ### Multi-version branches
 
-The repository keeps one branch per Minecraft version, with `master` always tracking the latest (26.2):
-
-| Branch | MC version | Toolchain |
-| --- | --- | --- |
-| `master` / `26.2` | 26.2 | Gradle 9.6.1 + JDK 25 |
-| `26.1.2` | 26.1.2 | Gradle 9.6.1 + JDK 25 |
-| `1.21.11` | 1.21.11 | Gradle 8.8 + JDK 21 |
-| `1.21.10` | 1.21.10 | Gradle 8.8 + JDK 21 |
-| `1.21.8` | 1.21.8 | Gradle 8.8 + JDK 21 |
-| `1.21.1` | 1.21.1 | Gradle 8.8 + JDK 21 |
-
-See [docs/VERSIONING.md](docs/VERSIONING.md) for the NeoForge coordinates, plugin requirements,
-icon field differences and API differences of each branch.
+One branch per MC version, `master` tracking the latest. See
+[docs/VERSIONING.md](docs/VERSIONING.md) for the branch list, NeoForge coordinates and
+per-version differences.
 
 ### License
 
