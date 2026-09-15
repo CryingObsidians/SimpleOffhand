@@ -10,9 +10,6 @@ modId = "${mod_id}" #mandatory
 version = "${mod_version}" #mandatory
 displayName = "${mod_name}" #mandatory
 displayURL = "https://github.com/CryingObsidians/SimpleOffhand"
-# 26.1.2 这条线只能用 logoFile。新版 NeoForge（26.2+）把它弃用、改成 bannerFile/iconFile，
-# 但 26.1.2.109 里没有 DefaultModDisplayInfo / LogoFileWarningsHandler 这两个类，
-# 写 iconFile 会被直接忽略、图标不显示。26.2 分支（master）那边才用 iconFile。
 logoFile = "simpleoffhand.png"
 authors = "${mod_authors}"
 description = '''${mod_description}'''
