@@ -2,5 +2,9 @@
   "simpleoffhand.config.modEnabled": "Enable Mod",
   "simpleoffhand.config.modEnabled.tooltip": "When off, the first-person hands are rendered exactly like vanilla.",
   "simpleoffhand.config.twoHandedItems": "Two-Handed Items",
-  "simpleoffhand.config.twoHandedItems.tooltip": "While one of these is held in the main hand, the extra offhand arm is not drawn, matching vanilla's two-handed behaviour."
+  "simpleoffhand.config.twoHandedItems.tooltip": "While one of these is held in the main hand, the extra offhand arm is not drawn, matching vanilla's two-handed behaviour.",
+  "simpleoffhand.config.twoHandedItems.button": "Edit",
+  "simpleoffhand.configuration.title": "SimpleOffhand",
+  "simpleoffhand.configuration.section.simpleoffhand.client.toml": "SimpleOffhand Configuration",
+  "simpleoffhand.configuration.section.simpleoffhand.client.toml.title": "SimpleOffhand Configuration"
 }
