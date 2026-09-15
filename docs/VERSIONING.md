@@ -141,13 +141,16 @@ print('\n'.join(difflib.unified_diff(
 Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or (for square icons) `iconFile`
 ```
 
-| | `neoforge.mods.toml` 里写 | 图片内容 |
-| --- | --- | --- |
-| 26.1.2（NeoForge 26.1.2.109） | `logoFile = "simpleoffhand.png"` | 正方形 |
-| 26.2（NeoForge 26.2.0.88+） | `iconFile = "simpleoffhand.png"` | 正方形（512×512） |
+| | `neoforge.mods.toml` 里写 | 图片文件 | 图片内容 |
+| --- | --- | --- | --- |
+| 1.21.11（NeoForge 21.11.45） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
+| 26.1.2（NeoForge 26.1.2.109） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
+| 26.2（NeoForge 26.2.0.88+） | `iconFile = "simpleoffhand.png"`<br>`bannerFile = "simpleoffhand-banner.png"` | `simpleoffhand.png` + `simpleoffhand-banner.png` | 正方形（512×512）+ 宽幅横幅 |
 
 两者的区别：`iconFile` 是**正方形图标**，`bannerFile` 是**宽幅横幅**（模组列表顶部的图）。
-本项目只有一张正方形图，所以只写 `iconFile`。
+
+26.2 分支**两个字段都要写**，各指一张图；少写 `bannerFile` 模组列表顶部就没有横幅。
+26.1.2 与 1.21.11 分支没有横幅文件，也不能写这两个字段，只用 `logoFile`。
 
 > ⚠️ 这里有个容易误判的地方：**`iconFile` / `bannerFile` 不是 FML 解析的字段**。
 > FML 的 `net.neoforged.fml.loading.moddiscovery.ModInfo` 只认 `logoFile` / `logoBlur`
@@ -160,7 +163,7 @@ Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or 
 > - `net/neoforged/neoforge/internal/LogoFileWarningsHandler`
 >
 > 26.1.2.109 **两个类都不存在**，所以 26.1.2 分支必须继续用 `logoFile`，
-> 写成 `iconFile` 会被忽略、图标不显示。
+> 写成 `iconFile` 会被忽略、图标不显示。`21.11.45` 同理，也只能用 `logoFile`。
 
 
 ### 26.x 全线：Java 25（已实测）
@@ -267,10 +270,16 @@ toolchainVersion=21
    （26.x = 9.6.1，1.21.11 = 8.8），以及 `gradle/gradle-daemon-jvm.properties`
    里守护进程的 `toolchainVersion` —— **Gradle 版本和守护进程 JVM 必须匹配得上**，
    旧 Gradle 跑在新 JDK 上会报 `Unsupported class file major version`。
-5. **Mixin 方法名与签名**：从 javadoc / 本地 sources jar 核对
-6. **`README.md`**：环境要求表、`./gradlew` 说明里的 JDK 版本
-7. **构建验证**：`clean build --no-build-cache`，确认无 `FROM-CACHE`
-8. **运行验证**：`./gradlew runClient` 进游戏看行为（编译过 ≠ Mixin 生效）
+5. **`src/main/templates/META-INF/neoforge.mods.toml`**：图标字段
+   （26.2 = `iconFile` + `bannerFile`；26.1.2 / 1.21.11 = `logoFile`，见上文）
+6. **Mixin 方法名与签名**：从 javadoc / 本地 sources jar 核对
+7. **`README.md`**：环境要求表、`./gradlew` 说明里的 JDK 版本
+8. **构建验证**：`clean build --no-build-cache`，确认无 `FROM-CACHE`
+9. **运行验证**：`./gradlew runClient` 进游戏看行为（编译过 ≠ Mixin 生效）
+
+> 第 8 步除了看有没有 `FROM-CACHE`，还要确认 `build/libs/` 里只有**本分支**那一个 jar。
+> 切过分支之后留下的旧 jar（例如在 26.2 上看到 `simpleoffhand-1.21.11+*.jar`）会被误当成产物发布，
+> 构建前先 `clean` 一次。
 
 ## 有用的 javadoc 来源
 
