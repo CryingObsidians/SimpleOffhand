@@ -32,8 +32,6 @@
 | `1.21.1` | `renderArmWithItem` | `MultiBufferSource` |
 | `1.20.6` / `1.20.4` / `1.20.1` | 未验证 | 未验证 |
 
-只有 26.2 改了方法名。注入方法的参数列表各版本都是 10 个，且只有第 9 个参数的类型在两代管线之间变过（换代点在 1.21.8 与 1.21.10 之间）。
-
 ## 其它版本差异
 
 | | |
@@ -47,8 +45,4 @@
 - **1.20.x 的注入目标未核对**：`renderArmWithItem` 与 `renderPlayerArm` 的签名、第 9 个参数是 `MultiBufferSource` 还是 `VertexConsumer`，都不确定。
 - **26.1.0 / 26.1.1 的方法名未核对**：26.1.2 是 `renderArmWithItem`，同线更早版本没验证过。
 - **渲染线程每帧读配置**：`SimpleOffhandConfig` 的两个方法每帧各调一次 `ConfigValue#get()`。暂不处理；真要做就监听 `ModConfigEvent.Loading` 把值读进字段，顺带消掉"配置未加载即读取"会抛 `IllegalStateException` 的隐患。
-- **注入是否真的生效只能进游戏看**：方法名或参数类型写错**不会编译报错**，运行期才抛 `Mixin apply failed`。进游戏、空着副手看第一人称，日志里出现这行即为生效：
-
-  ```
-  [Render thread/INFO] [SimpleOffhand/]: Offhand arm rendering active (injection applied).
-  ```
+- **注入是否真的生效只能进游戏看**：方法名或参数类型写错**不会编译报错**，运行期才抛 `Mixin apply failed`。进游戏、空着副手看第一人称，日志里出现 `[SimpleOffhand/]: Offhand arm rendering active (injection applied).` 即为生效。
