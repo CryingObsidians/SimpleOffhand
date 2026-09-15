@@ -4,8 +4,6 @@
 
 **中文** | [English](#english)
 
-![build](https://github.com/CryingObsidians/SimpleOffhand/actions/workflows/build.yml/badge.svg)
-
 ---
 
 ## 中文
