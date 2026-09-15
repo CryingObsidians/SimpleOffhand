@@ -1,7 +1,7 @@
 package com.halfinity.config;
 
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import org.apache.commons.lang3.tuple.Pair;
@@ -89,12 +89,12 @@ public final class SimpleOffhandConfig {
         if (stack.isEmpty()) {
             return false;
         }
-        Identifier id = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         return id != null && CLIENT.twoHandedItems.get().contains(id.toString());
     }
 
     /** 校验配置里的物品 ID 是否合法，供 {@code defineList} 使用。 */
     private static boolean isValidItemId(Object entry) {
-        return entry instanceof String id && Identifier.tryParse(id) != null;
+        return entry instanceof String id && ResourceLocation.tryParse(id) != null;
     }
 }

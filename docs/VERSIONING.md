@@ -10,6 +10,7 @@
 | `26.2` | 26.2 | master 的快照，固定 26.2 现场 |
 | `26.1.2` | 26.1.2 | 26.1 线的补丁版本 |
 | `1.21.11` | 1.21.11 | 旧编号体系；Gradle 8.8 + JDK 21 |
+| `1.21.10` | 1.21.10 | 旧编号体系；Gradle 8.8 + JDK 21 |
 
 > 以后每加一个版本就多一条同名分支；`master` 始终等于最新版。
 
@@ -28,8 +29,10 @@
 | `master` / `26.2` | `26.2` | `[26.2]` |
 | `26.1.2` | `26.1.2` | `[26.1.2]` |
 | `1.21.11` | `1.21.11` | `[1.21.11]` |
+| `1.21.10` | `1.21.10` | `[1.21.10]` |
 
-`neo_version_range` 同理收紧到对应的 NeoForge 线（`[26.2.0,)` / `[26.1.2,)` / `[21.11,)`），
+`neo_version_range` 同理收紧到对应的 NeoForge 线
+（`[26.2.0,)` / `[26.1.2,)` / `[21.11,)` / `[21.10,)`），
 不要写成 `[26,)` —— 那会把 26.1 线的 NeoForge 也认作满足条件。
 
 > 如果希望同一条线的后续补丁版本（例如将来出现 26.2.1）也能加载，
@@ -50,10 +53,11 @@ NeoForge 的版本号与 MC 版本对应关系**不是统一的**，需要逐条
 | 26.1.1 | `26.1.1.x` | `26.1.1.15-beta` | 独立线 |
 | 26.1 | `26.1.0.x` | `26.1.0.19-beta` | 独立线 |
 | 1.21.11 | `21.11.x` | `21.11.45` | 老编号体系，beta 到 `21.11.41-beta` |
+| 1.21.10 | `21.10.x` | `21.10.64` | 老编号体系，已转正式版 |
 | 1.20.1 | `20.1.x` | — | NeoForge 起点 |
 
 老编号体系的规则：**MC 版本去掉开头的 `1.`**，就是 NeoForge 的版本线
-（`1.21.11` → `21.11.x`，`1.21.4` → `21.4.x`，`1.20.1` → `20.1.x`）。
+（`1.21.11` → `21.11.x`，`1.21.10` → `21.10.x`，`1.21.4` → `21.4.x`，`1.20.1` → `20.1.x`）。
 NeoForge 自己的解析正则也是这么做的（`VersionCapabilitiesInternal.neoForgeVersionToMinecraftVersion`）。
 
 **注意**：26.1.2 的 NeoForge 版本是 `26.1.2.109`（与 MC 版本号同形），
@@ -143,6 +147,7 @@ Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or 
 
 | | `neoforge.mods.toml` 里写 | 图片文件 | 图片内容 |
 | --- | --- | --- | --- |
+| 1.21.10（NeoForge 21.10.64） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
 | 1.21.11（NeoForge 21.11.45） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
 | 26.1.2（NeoForge 26.1.2.109） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
 | 26.2（NeoForge 26.2.0.88+） | `iconFile = "simpleoffhand.png"`<br>`bannerFile = "simpleoffhand-banner.png"` | `simpleoffhand.png` + `simpleoffhand-banner.png` | 正方形（512×512）+ 宽幅横幅 |
@@ -150,7 +155,7 @@ Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or 
 两者的区别：`iconFile` 是**正方形图标**，`bannerFile` 是**宽幅横幅**（模组列表顶部的图）。
 
 26.2 分支**两个字段都要写**，各指一张图；少写 `bannerFile` 模组列表顶部就没有横幅。
-26.1.2 与 1.21.11 分支没有横幅文件，也不能写这两个字段，只用 `logoFile`。
+26.1.2 与两条 1.21.x 分支没有横幅文件，也不能写这两个字段，只用 `logoFile`。
 
 > ⚠️ 这里有个容易误判的地方：**`iconFile` / `bannerFile` 不是 FML 解析的字段**。
 > FML 的 `net.neoforged.fml.loading.moddiscovery.ModInfo` 只认 `logoFile` / `logoBlur`
@@ -163,7 +168,7 @@ Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or 
 > - `net/neoforged/neoforge/internal/LogoFileWarningsHandler`
 >
 > 26.1.2.109 **两个类都不存在**，所以 26.1.2 分支必须继续用 `logoFile`，
-> 写成 `iconFile` 会被忽略、图标不显示。`21.11.45` 同理，也只能用 `logoFile`。
+> 写成 `iconFile` 会被忽略、图标不显示。`21.10.64` / `21.11.45` 同理，也只能用 `logoFile`。
 
 
 ### 26.x 全线：Java 25（已实测）
@@ -182,7 +187,7 @@ net.neoforged:neoforge:26.1.2.109 was found`（一长串变体不匹配），
 根因就写在最后几条里：`fancymodloader` / `earlydisplay` / `neoform` 都只声明了 Java 25。
 **26.x 全线统一用 JDK 25，不要按 MC 小版本去猜 Java 版本。**
 
-### 1.21.11：管线已经是新的，只有方法名不同（已实测）
+### 1.21.10 / 1.21.11：管线已经是新的，只有方法名不同（已实测）
 
 **本节原本写的是「1.21 及更早用的是旧的立即模式渲染，没有 `SubmitNodeCollector`」，这是错的**，
 已被实测推翻。NeoForge `21.11.45` + MC 1.21.11 生成出来的源码是：
@@ -204,25 +209,44 @@ private void renderPlayerArm(
 - `renderPlayerArm` 的签名**与 26.x 一字不差**
 - **唯一区别**：被注入的方法在 1.21.11 叫 **`renderArmWithItem`**，26.2 起改名成 `submitArmWithItem`
 
-所以 `1.21.11` 与 `master` 两个分支的代码差异**只有 `@Inject(method = ...)` 里那个字符串**。
+所以各分支之间代码差异**只有 `@Inject(method = ...)` 里那个字符串**。
 
-| | 1.21.11 | 26.2 |
+| | 1.21.10 / 1.21.11 | 26.2 |
 | --- | --- | --- |
 | 注入目标方法 | `renderArmWithItem` | `submitArmWithItem` |
 | 参数列表 | 相同（10 个） | 相同（10 个） |
 | `renderPlayerArm` | `(PoseStack, SubmitNodeCollector, int, float, float, HumanoidArm)` | 同左 |
 
-### 1.21.11 与 26.x 的工具链差异
+> ⚠️ **1.21.10 与 1.21.11 之间也有差异，别以为相邻小版本就能照抄。**
+> 1.21.10 分支是从 1.21.11 直接派生的，第一次构建时唯一的编译错误就是标识符类改名：
+>
+> ```
+> 错误: 找不到符号
+> import net.minecraft.resources.Identifier;
+>                                ^
+>   符号:   类 Identifier
+> ```
+>
+> 1.21.10 用的还是 **`ResourceLocation`**，`Identifier` 是 1.21.11 才改的名。
+> `SimpleOffhandConfig` 里有两处要用到：取注册名的
+> `BuiltInRegistries.ITEM.getKey(...)` 和校验用的 `tryParse(...)`，
+> 两个类都提供同名方法，所以只是类型名替换。
+>
+> 除了这个类名和 `gradle.properties` 里的版本坐标，1.21.10 与 1.21.11
+> **没有别的差异** —— 渲染管线、注入签名、原版空手分支的逻辑都完全相同（已实测）。
 
-| | 1.21.11 | 26.x |
+### 1.21.10 / 1.21.11 与 26.x 的工具链差异
+
+| | 1.21.10 / 1.21.11 | 26.x |
 | --- | --- | --- |
 | JDK | **21** | 25 |
 | Gradle | **8.8** | 9.6.1 |
 | `compatibilityLevel` | `JAVA_21` | `JAVA_25` |
-| FML loader | `10.x`（`21.11.45` → `10.0.36`） | `11.x` |
+| FML loader | `10.x`（`21.10.64` → `10.0.32`，`21.11.45` → `10.0.36`） | `11.x` |
+| 图标字段 | `logoFile` | 26.2 = `iconFile` + `bannerFile` |
 
 26.x 要 Java 25 是因为 FancyModLoader 11.x 只声明了 Java 25 变体；
-1.21.11 用 loader 10.x，没这个限制，所以是 Java 21。
+1.21.x 用 loader 10.x，没这个限制，所以是 Java 21。
 
 ### ⚠️ Gradle 8.8 跑不了 JDK 25
 
@@ -233,7 +257,7 @@ BUG! exception in phase 'semantic analysis' in source unit '_BuildScript_'
 Unsupported class file major version 69
 ```
 
-所以 `1.21.11` 分支必须**同时**把守护进程的 JVM 钉到 21，用 Gradle 8.8 自带的
+所以 `1.21.10` / `1.21.11` 分支必须**同时**把守护进程的 JVM 钉到 21，用 Gradle 8.8 自带的
 daemon JVM 特性，文件 `gradle/gradle-daemon-jvm.properties`：
 
 ```
@@ -250,9 +274,10 @@ toolchainVersion=21
 
 ### 更早的版本（1.20.1 / 1.21.4 等，待实测）
 
-这次只验证了 **1.21.11**。更早的 1.20.x、早期 1.21.x 是不是也已经有 `SubmitNodeCollector`、
+到目前为止实测过的是 **1.21.10 / 1.21.11**（以及 26.1.2、26.2）。
+更早的 1.20.x、早期 1.21.x 是不是也已经有 `SubmitNodeCollector`、
 `renderPlayerArm` 的签名是否相同，**都不确定**，适配前必须重新核对
-（Java 版本也不一样：1.20.1 → 17）。不要照抄 26.x 或 1.21.11 的实现。
+（Java 版本也不一样：1.20.1 → 17）。不要照抄 26.x 或 1.21.x 的实现。
 
 ## 换版本时的检查清单
 
@@ -263,23 +288,25 @@ toolchainVersion=21
    - `neo_version` / `neo_version_range`（去 Maven metadata 查，别猜）
    - `mod_version`（形如 `<mc版本>+<mod版本>`，如 `26.2+0.1.0`）
 2. **`build.gradle`**
-   - `java.toolchain.languageVersion`（26.x = `25`，1.21.11 = `21`，1.20.1 = `17`）
+   - `java.toolchain.languageVersion`（26.x = `25`，1.21.x = `21`，1.20.1 = `17`）
    - `net.neoforged.moddev` 插件版本（新 NeoForge 通常要配新插件，见上文）
-3. **`simpleoffhand.mixins.json`**：`compatibilityLevel`（26.x = `JAVA_25`，1.21.11 = `JAVA_21`）
+3. **`simpleoffhand.mixins.json`**：`compatibilityLevel`（26.x = `JAVA_25`，1.21.x = `JAVA_21`）
 4. **Gradle 版本**：`gradle/wrapper/gradle-wrapper.properties` 的 `distributionUrl`
-   （26.x = 9.6.1，1.21.11 = 8.8），以及 `gradle/gradle-daemon-jvm.properties`
+   （26.x = 9.6.1，1.21.x = 8.8），以及 `gradle/gradle-daemon-jvm.properties`
    里守护进程的 `toolchainVersion` —— **Gradle 版本和守护进程 JVM 必须匹配得上**，
    旧 Gradle 跑在新 JDK 上会报 `Unsupported class file major version`。
 5. **`src/main/templates/META-INF/neoforge.mods.toml`**：图标字段
-   （26.2 = `iconFile` + `bannerFile`；26.1.2 / 1.21.11 = `logoFile`，见上文）
+   （26.2 = `iconFile` + `bannerFile`；其余分支 = `logoFile`，见上文）
 6. **Mixin 方法名与签名**：从 javadoc / 本地 sources jar 核对
-7. **`README.md`**：环境要求表、`./gradlew` 说明里的 JDK 版本
-8. **构建验证**：`clean build --no-build-cache`，确认无 `FROM-CACHE`
-9. **运行验证**：`./gradlew runClient` 进游戏看行为（编译过 ≠ Mixin 生效）
+7. **全仓搜一遍改名的 API**：`ResourceLocation` ↔ `Identifier` 这类改名不会出现在
+   javadoc 的"重大变更"里，只能靠编译报错暴露（1.21.10 就是这么踩到的）
+8. **`README.md`**：环境要求表、`./gradlew` 说明里的 JDK 版本、多版本分支表
+9. **构建验证**：`clean build --no-build-cache`，确认无 `FROM-CACHE`
+10. **运行验证**：`./gradlew runClient` 进游戏看行为（编译过 ≠ Mixin 生效）
 
-> 第 8 步除了看有没有 `FROM-CACHE`，还要确认 `build/libs/` 里只有**本分支**那一个 jar。
-> 切过分支之后留下的旧 jar（例如在 26.2 上看到 `simpleoffhand-1.21.11+*.jar`）会被误当成产物发布，
-> 构建前先 `clean` 一次。
+> 第 9 步除了看有没有 `FROM-CACHE`，还要确认 `build/libs/` 里只有**本分支**那一个 jar。
+> 切过分支之后留下的旧 jar（在 1.21.10 上看到 `simpleoffhand-26.2+*.jar` 这种）
+> 会被误当成产物发布，构建前先 `clean` 一次。
 
 ## 配置类型：用 CLIENT，不用 COMMON
 
