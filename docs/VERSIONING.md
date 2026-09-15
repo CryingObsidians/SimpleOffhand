@@ -11,6 +11,8 @@
 | `26.1.2` | 26.1.2 | 26.1 线的补丁版本 |
 | `1.21.11` | 1.21.11 | 旧编号体系；Gradle 8.8 + JDK 21 |
 | `1.21.10` | 1.21.10 | 旧编号体系；Gradle 8.8 + JDK 21 |
+| `1.21.8` | 1.21.8 | 旧编号体系；Gradle 8.8 + JDK 21 |
+| `1.21.1` | 1.21.1 | 旧编号体系；Gradle 8.8 + JDK 21 |
 
 > 以后每加一个版本就多一条同名分支；`master` 始终等于最新版。
 
@@ -30,9 +32,11 @@
 | `26.1.2` | `26.1.2` | `[26.1.2]` |
 | `1.21.11` | `1.21.11` | `[1.21.11]` |
 | `1.21.10` | `1.21.10` | `[1.21.10]` |
+| `1.21.8` | `1.21.8` | `[1.21.8]` |
+| `1.21.1` | `1.21.1` | `[1.21.1]` |
 
 `neo_version_range` 同理收紧到对应的 NeoForge 线
-（`[26.2.0,)` / `[26.1.2,)` / `[21.11,)` / `[21.10,)`），
+（`[26.2.0,)` / `[26.1.2,)` / `[21.11,)` / `[21.10,)` / `[21.8,)` / `[21.1,)`），
 不要写成 `[26,)` —— 那会把 26.1 线的 NeoForge 也认作满足条件。
 
 > 如果希望同一条线的后续补丁版本（例如将来出现 26.2.1）也能加载，
@@ -52,12 +56,15 @@ NeoForge 的版本号与 MC 版本对应关系**不是统一的**，需要逐条
 | 26.1.2 | `26.1.2.x` | `26.1.2.109` | 独立线 |
 | 26.1.1 | `26.1.1.x` | `26.1.1.15-beta` | 独立线 |
 | 26.1 | `26.1.0.x` | `26.1.0.19-beta` | 独立线 |
-| 1.21.11 | `21.11.x` | `21.11.45` | 老编号体系，beta 到 `21.11.41-beta` |
-| 1.21.10 | `21.10.x` | `21.10.64` | 老编号体系，已转正式版 |
+| 1.21.11 | `21.11.x` | `21.11.45` | 老编号体系，beta 到 `21.11.41-beta`；FML `10.0.36` |
+| 1.21.10 | `21.10.x` | `21.10.64` | 老编号体系，已转正式版；FML `10.0.32` |
+| 1.21.8 | `21.8.x` | `21.8.54` | 老编号体系；FML `9.0.18` |
+| 1.21.1 | `21.1.x` | `21.1.250` | 老编号体系；LTS 线，补丁号已经很大；FML `4.0.44` |
 | 1.20.1 | `20.1.x` | — | NeoForge 起点 |
 
 老编号体系的规则：**MC 版本去掉开头的 `1.`**，就是 NeoForge 的版本线
-（`1.21.11` → `21.11.x`，`1.21.10` → `21.10.x`，`1.21.4` → `21.4.x`，`1.20.1` → `20.1.x`）。
+（`1.21.11` → `21.11.x`，`1.21.10` → `21.10.x`，`1.21.8` → `21.8.x`，
+`1.21.1` → `21.1.x`，`1.20.1` → `20.1.x`）。
 NeoForge 自己的解析正则也是这么做的（`VersionCapabilitiesInternal.neoForgeVersionToMinecraftVersion`）。
 
 **注意**：26.1.2 的 NeoForge 版本是 `26.1.2.109`（与 MC 版本号同形），
@@ -147,6 +154,8 @@ Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or 
 
 | | `neoforge.mods.toml` 里写 | 图片文件 | 图片内容 |
 | --- | --- | --- | --- |
+| 1.21.1（NeoForge 21.1.250） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
+| 1.21.8（NeoForge 21.8.54） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
 | 1.21.10（NeoForge 21.10.64） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
 | 1.21.11（NeoForge 21.11.45） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
 | 26.1.2（NeoForge 26.1.2.109） | `logoFile = "simpleoffhand.png"` | 只有一张正方形图 | 正方形 |
@@ -155,7 +164,7 @@ Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or 
 两者的区别：`iconFile` 是**正方形图标**，`bannerFile` 是**宽幅横幅**（模组列表顶部的图）。
 
 26.2 分支**两个字段都要写**，各指一张图；少写 `bannerFile` 模组列表顶部就没有横幅。
-26.1.2 与两条 1.21.x 分支没有横幅文件，也不能写这两个字段，只用 `logoFile`。
+26.1.2 与全部 1.21.x 分支没有横幅文件，也不能写这两个字段，只用 `logoFile`。
 
 > ⚠️ 这里有个容易误判的地方：**`iconFile` / `bannerFile` 不是 FML 解析的字段**。
 > FML 的 `net.neoforged.fml.loading.moddiscovery.ModInfo` 只认 `logoFile` / `logoBlur`
@@ -187,38 +196,45 @@ net.neoforged:neoforge:26.1.2.109 was found`（一长串变体不匹配），
 根因就写在最后几条里：`fancymodloader` / `earlydisplay` / `neoform` 都只声明了 Java 25。
 **26.x 全线统一用 JDK 25，不要按 MC 小版本去猜 Java 版本。**
 
-### 1.21.10 / 1.21.11：管线已经是新的，只有方法名不同（已实测）
+### 1.21.x 内部就换过一次渲染管线（已实测）
 
-**本节原本写的是「1.21 及更早用的是旧的立即模式渲染，没有 `SubmitNodeCollector`」，这是错的**，
-已被实测推翻。NeoForge `21.11.45` + MC 1.21.11 生成出来的源码是：
+**本节原本写的是「1.21 及更早用的是旧的立即模式渲染」，后来又改成「1.21.10 起才是新管线」——
+两个都不准确。** 实测结果是：**换代发生在 1.21.8 与 1.21.10 之间**，
+所以 1.21.x 这五个分支分属两代管线。
+
+| | 1.21.1 / 1.21.8 | 1.21.10 / 1.21.11 | 26.2 |
+| --- | --- | --- | --- |
+| 注入目标方法 | `renderArmWithItem` | `renderArmWithItem` | `submitArmWithItem` |
+| 参数列表 | 10 个 | 10 个 | 10 个 |
+| 第 9 个参数类型 | **`MultiBufferSource`** | **`SubmitNodeCollector`** | `SubmitNodeCollector` |
+| `renderPlayerArm` | `(PoseStack, MultiBufferSource, int, float, float, HumanoidArm)` | `(PoseStack, SubmitNodeCollector, int, float, float, HumanoidArm)` | 同左 |
+| 标识符类 | `ResourceLocation` | 1.21.10 `ResourceLocation`<br>1.21.11 `Identifier` | `Identifier` |
+
+也就是说这份代码在 1.21.x 上要改的**不止方法名和类名，还有一个参数类型**：
 
 ```java
-// net/minecraft/client/renderer/ItemInHandRenderer
+// 1.21.8 —— 旧管线
 private void renderArmWithItem(
         AbstractClientPlayer player, float partialTick, float pitch,
         InteractionHand hand, float swingProgress, ItemStack itemStack,
         float equippedProgress, PoseStack poseStack,
-        SubmitNodeCollector collector, int lightCoords)
+        MultiBufferSource bufferSource, int lightCoords)
 
-private void renderPlayerArm(
-        PoseStack poseStack, SubmitNodeCollector collector, int lightCoords,
-        float equippedProgress, float swingProgress, HumanoidArm arm)
+// 1.21.10 起 —— 新管线
+        SubmitNodeCollector collector, int lightCoords)
 ```
 
-- **已经有 `SubmitNodeCollector`**，也在用 `AvatarRenderer`（`renderRightHand` / `renderLeftHand`）
-- `renderPlayerArm` 的签名**与 26.x 一字不差**
-- **唯一区别**：被注入的方法在 1.21.11 叫 **`renderArmWithItem`**，26.2 起改名成 `submitArmWithItem`
+`MultiBufferSource` → `SubmitNodeCollector` 这个改动在 `@Shadow renderPlayerArm`
+和注入方法的参数列表上都要跟着改（共 4 处：import、`@Shadow` 参数、注入方法参数、调用处）。
 
-所以各分支之间代码差异**只有 `@Inject(method = ...)` 里那个字符串**。
+> ⚠️ **改错的代价是运行期才暴露。** 参数类型不匹配（或类型写错）编译能过，
+> 但 Mixin 会在运行期抛 `Mixin apply failed`。所以每换一条版本线都必须
+> `./gradlew runClient` 进游戏确认，编译通过不等于 Mixin 生效。
 
-| | 1.21.10 / 1.21.11 | 26.2 |
-| --- | --- | --- |
-| 注入目标方法 | `renderArmWithItem` | `submitArmWithItem` |
-| 参数列表 | 相同（10 个） | 相同（10 个） |
-| `renderPlayerArm` | `(PoseStack, SubmitNodeCollector, int, float, float, HumanoidArm)` | 同左 |
+**1.21.1 与 1.21.8 的签名逐字相同**，两条分支的源码只差 `gradle.properties` 里的版本坐标。
 
-> ⚠️ **1.21.10 与 1.21.11 之间也有差异，别以为相邻小版本就能照抄。**
-> 1.21.10 分支是从 1.21.11 直接派生的，第一次构建时唯一的编译错误就是标识符类改名：
+> ⚠️ **相邻小版本之间也会改名，别照抄。** 1.21.10 分支从 1.21.11 派生时，
+> 第一次构建唯一的编译错误是标识符类改名：
 >
 > ```
 > 错误: 找不到符号
@@ -228,21 +244,18 @@ private void renderPlayerArm(
 > ```
 >
 > 1.21.10 用的还是 **`ResourceLocation`**，`Identifier` 是 1.21.11 才改的名。
-> `SimpleOffhandConfig` 里有两处要用到：取注册名的
+> `SimpleOffhandConfig` 里有两处用到：取注册名的
 > `BuiltInRegistries.ITEM.getKey(...)` 和校验用的 `tryParse(...)`，
 > 两个类都提供同名方法，所以只是类型名替换。
->
-> 除了这个类名和 `gradle.properties` 里的版本坐标，1.21.10 与 1.21.11
-> **没有别的差异** —— 渲染管线、注入签名、原版空手分支的逻辑都完全相同（已实测）。
 
-### 1.21.10 / 1.21.11 与 26.x 的工具链差异
+### 1.21.x 与 26.x 的工具链差异
 
-| | 1.21.10 / 1.21.11 | 26.x |
+| | 1.21.1 / 1.21.8 / 1.21.10 / 1.21.11 | 26.x |
 | --- | --- | --- |
 | JDK | **21** | 25 |
 | Gradle | **8.8** | 9.6.1 |
 | `compatibilityLevel` | `JAVA_21` | `JAVA_25` |
-| FML loader | `10.x`（`21.10.64` → `10.0.32`，`21.11.45` → `10.0.36`） | `11.x` |
+| FML loader | `4.x`（1.21.1 = `4.0.44`）<br>`9.x`（1.21.8 = `9.0.18`）<br>`10.x`（1.21.10 = `10.0.32`，1.21.11 = `10.0.36`） | `11.x` |
 | 图标字段 | `logoFile` | 26.2 = `iconFile` + `bannerFile` |
 
 26.x 要 Java 25 是因为 FancyModLoader 11.x 只声明了 Java 25 变体；
@@ -274,10 +287,16 @@ toolchainVersion=21
 
 ### 更早的版本（1.20.1 / 1.21.4 等，待实测）
 
-到目前为止实测过的是 **1.21.10 / 1.21.11**（以及 26.1.2、26.2）。
-更早的 1.20.x、早期 1.21.x 是不是也已经有 `SubmitNodeCollector`、
-`renderPlayerArm` 的签名是否相同，**都不确定**，适配前必须重新核对
-（Java 版本也不一样：1.20.1 → 17）。不要照抄 26.x 或 1.21.x 的实现。
+到目前为止实测过的是 **1.21.1 / 1.21.8 / 1.21.10 / 1.21.11**（以及 26.1.2、26.2）。
+更早的 1.20.x 与 1.21.4 等中间版本**都没验证过**：`renderArmWithItem` 与
+`renderPlayerArm` 的签名、用的到底是 `MultiBufferSource` 还是更早的
+`VertexConsumer`，**都不确定**，适配前必须逐个核对
+（Java 版本也不一样：1.20.1 及更早 → 17）。
+**不要照抄 26.x，也不要照抄任何一条 1.21.x 分支。**
+
+> 1.20.x 暂时没开分支：那需要 JDK 17，而换 JDK 会牵动
+> `build.gradle` 的 toolchain、`simpleoffhand.mixins.json` 的 `compatibilityLevel`
+> 和 Gradle 版本三处，成本比 1.21.x 之间复制要高一档。真要做的时候按上面的清单走。
 
 ## 换版本时的检查清单
 
@@ -297,9 +316,13 @@ toolchainVersion=21
    旧 Gradle 跑在新 JDK 上会报 `Unsupported class file major version`。
 5. **`src/main/templates/META-INF/neoforge.mods.toml`**：图标字段
    （26.2 = `iconFile` + `bannerFile`；其余分支 = `logoFile`，见上文）
-6. **Mixin 方法名与签名**：从 javadoc / 本地 sources jar 核对
-7. **全仓搜一遍改名的 API**：`ResourceLocation` ↔ `Identifier` 这类改名不会出现在
-   javadoc 的"重大变更"里，只能靠编译报错暴露（1.21.10 就是这么踩到的）
+6. **Mixin 方法名与签名**：从 javadoc / 本地 sources jar 核对。
+   **参数类型也要核**——1.21.8 → 1.21.10 就是把 `MultiBufferSource` 换成了
+   `SubmitNodeCollector`，方法名却没变
+7. **全仓搜一遍改名的 API**：`ResourceLocation` ↔ `Identifier`、
+   `MultiBufferSource` ↔ `SubmitNodeCollector` 这类改名不会出现在
+   javadoc 的"重大变更"里，只能靠编译报错暴露
+   （1.21.10 的类名、1.21.8 的渲染类型都是这么踩到的）
 8. **`README.md`**：环境要求表、`./gradlew` 说明里的 JDK 版本、多版本分支表
 9. **构建验证**：`clean build --no-build-cache`，确认无 `FROM-CACHE`
 10. **运行验证**：`./gradlew runClient` 进游戏看行为（编译过 ≠ Mixin 生效）
