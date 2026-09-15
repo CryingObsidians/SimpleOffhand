@@ -26,7 +26,7 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 26.1.2 |
+| Minecraft | 26.1.2（`minecraft_version_range=[26.1.2]`） |
 | NeoForge | 26.1.2.109（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
@@ -84,8 +84,11 @@ if (itemStack.isEmpty()) {
 
 ### 多版本
 
-仓库按 Minecraft 版本分分支，`master` 始终跟随最新版。各版本对应的 NeoForge
-版本坐标与 API 差异见 [docs/VERSIONING.md](docs/VERSIONING.md)。
+仓库按 Minecraft 版本分分支，`master` 始终跟随最新版（当前为 26.2）。各版本对应的 NeoForge
+版本坐标、插件版本要求与 API 差异见 [docs/VERSIONING.md](docs/VERSIONING.md)。
+
+每个分支的 `minecraft_version_range` 只覆盖自己那一条版本线。26.x 的各条线（26.1 / 26.1.1 /
+26.1.2 / 26.2 …）由 NeoForge 并行维护，渲染管线签名并不相同，所以不写 `[26.1,26.2)` 这类跨版本区间。
 
 ---
 
@@ -103,7 +106,7 @@ Exception: while a **map** is held in the main hand, vanilla already renders bot
 
 | | |
 | --- | --- |
-| Minecraft | 26.1.2 |
+| Minecraft | 26.1.2 (`minecraft_version_range=[26.1.2]`) |
 | NeoForge | 26.1.2.109 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
