@@ -4,7 +4,7 @@ import com.halfinity.config.SimpleOffhandConfig;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.ItemInHandRenderer;
-import net.minecraft.client.renderer.SubmitNodeCollector;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
@@ -46,7 +46,7 @@ public abstract class ItemInHandRendererMixin {
     @Shadow
     private void renderPlayerArm(
             PoseStack poseStack,
-            SubmitNodeCollector submitNodeCollector,
+            MultiBufferSource bufferSource,
             int lightCoords,
             float inverseArmHeight,
             float attackValue,
@@ -64,7 +64,7 @@ public abstract class ItemInHandRendererMixin {
             ItemStack itemStack,
             float inverseArmHeight,
             PoseStack poseStack,
-            SubmitNodeCollector submitNodeCollector,
+            MultiBufferSource bufferSource,
             int lightCoords,
             CallbackInfo ci
     ) {
@@ -91,7 +91,7 @@ public abstract class ItemInHandRendererMixin {
         poseStack.pushPose();
         this.renderPlayerArm(
                 poseStack,
-                submitNodeCollector,
+                bufferSource,
                 lightCoords,
                 inverseArmHeight,
                 attack,
