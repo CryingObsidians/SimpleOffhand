@@ -22,8 +22,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 1.21.10（`minecraft_version_range=[1.21.10]`） |
-| NeoForge | 21.10.64（loader `4+`） |
+| Minecraft | 1.21.1（`minecraft_version_range=[1.21.1]`） |
+| NeoForge | 21.1.250（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -76,7 +76,7 @@ if (itemStack.isEmpty()) {
 
 ### 相关项目
 
-1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.21.10 的实现。
+1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.21.1 的实现。
 
 ### 多版本
 
@@ -88,6 +88,8 @@ if (itemStack.isEmpty()) {
 | `26.1.2` | 26.1.2 | Gradle 9.6.1 + JDK 25 |
 | `1.21.11` | 1.21.11 | Gradle 8.8 + JDK 21 |
 | `1.21.10` | 1.21.10 | Gradle 8.8 + JDK 21 |
+| `1.21.8` | 1.21.8 | Gradle 8.8 + JDK 21 |
+| `1.21.1` | 1.21.1 | Gradle 8.8 + JDK 21 |
 
 各分支对应的 NeoForge 版本坐标、插件版本要求、图标字段差异与 API 差异见
 [docs/VERSIONING.md](docs/VERSIONING.md)。
@@ -108,8 +110,8 @@ Special case: **when a map is held in the main hand**, vanilla's main-hand rende
 
 | | |
 | --- | --- |
-| Minecraft | 1.21.10 (`minecraft_version_range=[1.21.10]`) |
-| NeoForge | 21.10.64 (loader `4+`) |
+| Minecraft | 1.21.1 (`minecraft_version_range=[1.21.1]`) |
+| NeoForge | 21.1.250 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
@@ -150,6 +152,8 @@ The repository keeps one branch per Minecraft version, with `master` always trac
 | `26.1.2` | 26.1.2 | Gradle 9.6.1 + JDK 25 |
 | `1.21.11` | 1.21.11 | Gradle 8.8 + JDK 21 |
 | `1.21.10` | 1.21.10 | Gradle 8.8 + JDK 21 |
+| `1.21.8` | 1.21.8 | Gradle 8.8 + JDK 21 |
+| `1.21.1` | 1.21.1 | Gradle 8.8 + JDK 21 |
 
 See [docs/VERSIONING.md](docs/VERSIONING.md) for the NeoForge coordinates, plugin requirements,
 icon field differences and API differences of each branch.
