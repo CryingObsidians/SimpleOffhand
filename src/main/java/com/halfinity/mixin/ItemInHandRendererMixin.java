@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /**
  * 让空着的副手也画出手臂。
  *
- * <p>原版 {@code ItemInHandRenderer#submitArmWithItem} 的空手分支是这样的：</p>
+ * <p>原版 {@code ItemInHandRenderer#renderArmWithItem} 的空手分支是这样的：</p>
  *
  * <pre>{@code
  * if (itemStack.isEmpty()) {
@@ -54,7 +54,7 @@ public abstract class ItemInHandRendererMixin {
     ) {
     }
 
-    @Inject(method = "submitArmWithItem", at = @At("HEAD"))
+    @Inject(method = "renderArmWithItem", at = @At("HEAD"))
     private void simpleoffhand$renderEmptyOffhandArm(
             AbstractClientPlayer player,
             float frameInterp,
