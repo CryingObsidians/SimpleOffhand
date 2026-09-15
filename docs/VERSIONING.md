@@ -322,27 +322,22 @@ if (!datagen) {
 
 `Type.CLIENT` 在 FML 10.x（1.21.11 用的那代）和 11.x（26.x）里都存在，两条线都能这么写。
 
-## CI：`.github/workflows/build.yml`
+## 已知待办
 
-工作流在 push / PR / 手动触发时跑两条 job：
+### 渲染线程每帧读配置
 
-- **`build`**：矩阵构建全部四条分支，每条 checkout 到自己的分支，用**自己那档 JDK**
-  （26.x = 25，1.21.11 = 21），Gradle 版本由 `setup-gradle` 从
-  `gradle-wrapper.properties` 里读，不用重复声明。
-- **`validate-wrapper`**：校验 `gradle-wrapper.jar` 的校验和。
+`SimpleOffhandConfig.isEnabled()` 和 `isTwoHandedItem()` 每帧各读一次
+`ModConfigSpec.ConfigValue#get()`。列表通常只有一项，开销可以忽略，所以**暂时不动**。
 
-两个容易踩的点：
+真要优化的话，不要在外面加缓存字段，正道是监听 `ModConfigEvent.Loading`，
+加载/重载时把值读进普通字段，渲染路径只读字段。这样能一次消掉两个问题：
+每帧读配置，以及"配置未加载就被读到"（`ConfigValue#get()` 会抛 `IllegalStateException`）。
 
-1. **`setup-java` 必须排在 `setup-gradle` 前面**。`setup-gradle` 一执行就会解析并下载
-   Gradle 发行包，那时 `JAVA_HOME` 还是 runner 自带的版本 —— 1.21.11 那条会直接死在
-   `Unsupported class file major version 69`（Gradle 8.8 跑不了 JDK 25）。
-2. **CI 依赖仓库真的装了 GitHub Actions**。它在 fork 或关闭了 Actions 的仓库里**不会运行**，
-   而且**没有网络请求能替你验证这一点** —— 推完之后去仓库的 Actions 标签页看一眼，
-   有绿色勾才算真的通了。如果看到"Workflows aren't being run on this forked repository"
-   或 Actions 被禁用，去 Settings → Actions 里启用。
+### 渲染行为的改动只能靠进游戏验证
 
-产物用 `upload-artifact` 传上去（`simpleoffhand-<分支>`）。构建步骤后面有一道断言：
-`build/libs/` 里有且只有一个 jar —— 这正是本地踩过的"跨分支旧 jar 被误当产物"那个坑。
+`@Inject` 里的方法名写错**不会编译报错**，Mixin 在运行期才抛 `Mixin apply failed`。
+所以每次换版本、改 `@Inject` 之后都必须 `./gradlew runClient` 进游戏看一眼，
+编译通过不等于 Mixin 生效。
 
 ## 有用的 javadoc 来源
 
