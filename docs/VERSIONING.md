@@ -113,7 +113,7 @@ print('\n'.join(difflib.unified_diff(
 
 ### 26.1.2 → 26.2
 
-**唯一差异：目标方法改名。**
+**差异一：目标方法改名。**
 
 | | 26.1.2 | 26.2 |
 | --- | --- | --- |
@@ -125,6 +125,37 @@ print('\n'.join(difflib.unified_diff(
 
 > ⚠️ **方法名写错不会编译报错**，Mixin 在运行期才抛 `Mixin apply failed`。
 > 换版本后必须进游戏验证，不能只看编译通过。
+
+**差异二：模组元数据的图标字段改名。**
+
+新 NeoForge 用 `bannerFile` + `iconFile` 取代了旧的 `logoFile`。
+`logoFile` 已弃用，用它会触发警告：
+
+```
+Mod <id> uses the deprecated `logoFile` property; change to `bannerFile` and/or (for square icons) `iconFile`
+```
+
+| | `neoforge.mods.toml` 里写 | 图片内容 |
+| --- | --- | --- |
+| 26.1.2（NeoForge 26.1.2.109） | `logoFile = "simpleoffhand.png"` | 正方形 |
+| 26.2（NeoForge 26.2.0.88+） | `iconFile = "simpleoffhand.png"` | 正方形（512×512） |
+
+两者的区别：`iconFile` 是**正方形图标**，`bannerFile` 是**宽幅横幅**（模组列表顶部的图）。
+本项目只有一张正方形图，所以只写 `iconFile`。
+
+> ⚠️ 这里有个容易误判的地方：**`iconFile` / `bannerFile` 不是 FML 解析的字段**。
+> FML 的 `net.neoforged.fml.loading.moddiscovery.ModInfo` 只认 `logoFile` / `logoBlur`
+> （旧版兼容），所以去 loader jar 里搜 `iconFile` 是搜不到的 —— 别据此判断"没这个字段"。
+> `iconFile` / `bannerFile` / `iconBlur` 是 **NeoForge 自己**在
+> `net.neoforged.neoforge.client.gui.modlist.DefaultModDisplayInfo` 里直接读 toml 取的。
+>
+> 判断某个 NeoForge 版本是否支持，看它有没有这两个类：
+> - `net/neoforged/neoforge/client/gui/modlist/DefaultModDisplayInfo`
+> - `net/neoforged/neoforge/internal/LogoFileWarningsHandler`
+>
+> 26.1.2.109 **两个类都不存在**，所以 26.1.2 分支必须继续用 `logoFile`，
+> 写成 `iconFile` 会被忽略、图标不显示。
+
 
 ### 26.x 全线：Java 25（已实测）
 
