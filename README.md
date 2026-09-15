@@ -26,8 +26,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 26.2 |
-| NeoForge | 26.2.0.45-beta（loader `4+`） |
+| Minecraft | 26.2（`minecraft_version_range=[26.2]`） |
+| NeoForge | 26.2.0.88（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -82,6 +82,14 @@ if (itemStack.isEmpty()) {
 
 1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 26.2 的实现。
 
+### 多版本
+
+仓库按 Minecraft 版本分分支，`master` 始终跟随最新版（当前为 26.2）。各版本对应的 NeoForge
+版本坐标、插件版本要求与 API 差异见 [docs/VERSIONING.md](docs/VERSIONING.md)。
+
+每个分支的 `minecraft_version_range` 只覆盖自己那一条版本线。26.x 的各条线（26.1 / 26.1.1 /
+26.1.2 / 26.2 …）由 NeoForge 并行维护，渲染管线签名并不相同，所以不写 `[26.1,26.2)` 这类跨版本区间。
+
 ---
 
 ## English
@@ -98,8 +106,8 @@ Exception: while a **map** is held in the main hand, vanilla already renders bot
 
 | | |
 | --- | --- |
-| Minecraft | 26.2 |
-| NeoForge | 26.2.0.45-beta (loader `4+`) |
+| Minecraft | 26.2 (`minecraft_version_range=[26.2]`) |
+| NeoForge | 26.2.0.88 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
