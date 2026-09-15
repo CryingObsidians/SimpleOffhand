@@ -1,6 +1,6 @@
 # SimpleOffhand
 
-让第一人称下的空副手也显示出手臂，还原快照 `22w13oneblockatatime` 里"双手都可见"的表现。
+让第一人称下的空副手也显示出手臂，正如在愚人节版本 `22w13oneblockatatime` 中一样。
 
 **中文** | [English](#english)
 
@@ -10,17 +10,13 @@
 
 ### 效果
 
-原版第一人称只会渲染正在使用的那只手。副手空着的时候，那条手臂是**完全不画**的 —— 这也是为什么空手时你只看得到一只手。
+原版第一人称只会渲染主手。当副手为空，副手手臂是**完全不渲染**的 —— 这也是为什么会出现这个mod。
 
-装上这个模组后，副手为空时也会把副手手臂画出来，于是左手和右手同时可见。
+装上这个模组后，副手为空时也会渲染副手手臂画出来。
 
-一个例外：**主手拿着地图**时，原版本来就会双手举着地图（`renderTwoHandedMap`），这时保持原版行为，不再额外补一条手臂。这个"例外物品"的列表可以在配置里改。
+特殊情况：**主手拿着地图**时，原版渲染主手的方法变成（`renderTwoHandedMap`），这时会额外渲染出副手手臂。所以这时候保持原版行为，不再额外补一条手臂。这个"例外物品"的列表可以在配置里改。
 
-<!--
-有截图后启用下面这行（把图片放到 docs/ 目录，例如 docs/offhand.png）：
-
-![效果](docs/offhand.png)
--->
+![效果](docs/simpleoffhand-banner.png)
 
 ### 环境要求
 
@@ -48,7 +44,7 @@
 | `modEnabled` | `true` | 模组总开关。关掉后第一人称手部完全按原版渲染。 |
 | `twoHandedItems` | `["minecraft:filled_map"]` | 「双手物品」列表。主手持有这些物品时不再补画副手手臂，保持原版表现。每一项写成 `命名空间:路径`。 |
 
-例子：想让主手拿盾牌时也保持原版行为：
+例如：想让主手拿盾牌时也保持原版行为：
 
 ```toml
 twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
@@ -87,20 +83,17 @@ if (itemStack.isEmpty()) {
 仓库按 Minecraft 版本分分支，`master` 始终跟随最新版（当前为 26.2）。各版本对应的 NeoForge
 版本坐标、插件版本要求与 API 差异见 [docs/VERSIONING.md](docs/VERSIONING.md)。
 
-每个分支的 `minecraft_version_range` 只覆盖自己那一条版本线。26.x 的各条线（26.1 / 26.1.1 /
-26.1.2 / 26.2 …）由 NeoForge 并行维护，渲染管线签名并不相同，所以不写 `[26.1,26.2)` 这类跨版本区间。
-
 ---
 
 ## English
 
 ### What it does
 
-In vanilla first person, only the hand you are actively using is rendered. When your offhand is empty, that arm is **not drawn at all** — which is why you normally only see one hand.
+In vanilla first person, only the main hand is rendered. When the offhand slot is empty, the offhand arm is **not rendered at all** — which is why this mod exists.
 
-This mod renders the offhand arm when the offhand slot is empty, so both hands are visible at once, recreating the look of snapshot `22w13oneblockatatime`.
+With this mod installed, the offhand arm is rendered when the offhand slot is empty.
 
-Exception: while a **map** is held in the main hand, vanilla already renders both hands holding the map, so the vanilla behaviour is kept and no extra arm is drawn. That list of items is configurable.
+Special case: **when a map is held in the main hand**, vanilla's main-hand rendering path becomes (`renderTwoHandedMap`), which renders the offhand arm as well. So vanilla behaviour is kept here and no extra arm is drawn. The list of these items can be changed in the config.
 
 ### Requirements
 
