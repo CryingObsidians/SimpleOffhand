@@ -22,8 +22,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 26.2（`minecraft_version_range=[26.2]`） |
-| NeoForge | 26.2.0.88（loader `4+`） |
+| Minecraft | 1.21.11（`minecraft_version_range=[1.21.11]`） |
+| NeoForge | 21.11.45（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -52,7 +52,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 从源码构建
 
-需要 JDK 25。
+需要 JDK 21。
 
 ```bash
 ./gradlew build
@@ -62,7 +62,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 实现方式
 
-用一个 Mixin 挂在 `ItemInHandRenderer#submitArmWithItem` 上。原版的空手分支是：
+用一个 Mixin 挂在 `ItemInHandRenderer#renderArmWithItem` 上。原版的空手分支是：
 
 ```java
 if (itemStack.isEmpty()) {
@@ -76,7 +76,7 @@ if (itemStack.isEmpty()) {
 
 ### 相关项目
 
-1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 26.2 的实现。
+1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.21.11 的实现。
 
 ### 多版本
 
@@ -99,8 +99,8 @@ Special case: **when a map is held in the main hand**, vanilla's main-hand rende
 
 | | |
 | --- | --- |
-| Minecraft | 26.2 (`minecraft_version_range=[26.2]`) |
-| NeoForge | 26.2.0.88 (loader `4+`) |
+| Minecraft | 1.21.11 (`minecraft_version_range=[1.21.11]`) |
+| NeoForge | 21.11.45 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
@@ -123,7 +123,7 @@ The config file is `config/simpleoffhand-common.toml`. In game, open it from *Mo
 
 ### Building
 
-Requires JDK 25.
+Requires JDK 21.
 
 ```bash
 ./gradlew build
