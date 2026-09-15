@@ -8,11 +8,15 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemStack;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 让空着的副手也画出手臂。
@@ -39,6 +43,21 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(ItemInHandRenderer.class)
 public abstract class ItemInHandRendererMixin {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("SimpleOffhand");
+
+    /**
+     * 只在第一次真正走到「副手 + 空手」这条分支时记一条日志。
+     *
+     * <p>注入的方法名或参数类型写错**不会编译报错**，要到运行期才抛
+     * Mixin apply failed。这条日志让「换版本后注入点到底有没有生效」有一个
+     * 可以直接在 log 里看到的证据：进游戏、空着副手看第一人称，日志里出现这一行
+     * 就说明注入成功且渲染路径确实走到了。</p>
+     *
+     * <p>用 AtomicBoolean 保证只记一次，渲染线程上也只是一个 boolean 判断，
+     * 不会每帧刷屏。</p>
+     */
+    private static final AtomicBoolean LOGGED_FIRST_CALL = new AtomicBoolean(false);
 
     /**
      * 原版画裸手臂的方法，这里借它来完成实际渲染，避免把一整套手臂变换抄一遍。
@@ -98,5 +117,9 @@ public abstract class ItemInHandRendererMixin {
                 player.getMainArm().getOpposite()
         );
         poseStack.popPose();
+
+        if (LOGGED_FIRST_CALL.compareAndSet(false, true)) {
+            LOGGER.info("Offhand arm rendering active (injection applied).");
+        }
     }
 }
