@@ -2,5 +2,9 @@
   "simpleoffhand.config.modEnabled": "启用模组",
   "simpleoffhand.config.modEnabled.tooltip": "关闭后，第一人称手部完全按原版渲染。",
   "simpleoffhand.config.twoHandedItems": "双手物品",
-  "simpleoffhand.config.twoHandedItems.tooltip": "主手持有这些物品时，不再额外画出空的副手手臂，与原版双手举图的表现保持一致。"
+  "simpleoffhand.config.twoHandedItems.tooltip": "主手持有这些物品时，不再额外画出空的副手手臂，与原版双手举图的表现保持一致。",
+  "simpleoffhand.config.twoHandedItems.button": "编辑",
+  "simpleoffhand.configuration.title": "SimpleOffhand",
+  "simpleoffhand.configuration.section.simpleoffhand.client.toml": "SimpleOffhand 配置",
+  "simpleoffhand.configuration.section.simpleoffhand.client.toml.title": "SimpleOffhand 配置"
 }
