@@ -85,6 +85,7 @@ if (itemStack.isEmpty()) {
 | `master` / `26.2` | 26.2 | Gradle 9.6.1 + JDK 25 |
 | `26.1.2` | 26.1.2 | Gradle 9.6.1 + JDK 25 |
 | `1.21.11` | 1.21.11 | Gradle 8.8 + JDK 21 |
+| `1.21.10` | 1.21.10 | Gradle 8.8 + JDK 21 |
 
 各分支对应的 NeoForge 版本坐标、插件版本要求、图标字段差异与 API 差异见
 [docs/VERSIONING.md](docs/VERSIONING.md)。
@@ -146,6 +147,7 @@ The repository keeps one branch per Minecraft version, with `master` always trac
 | `master` / `26.2` | 26.2 | Gradle 9.6.1 + JDK 25 |
 | `26.1.2` | 26.1.2 | Gradle 9.6.1 + JDK 25 |
 | `1.21.11` | 1.21.11 | Gradle 8.8 + JDK 21 |
+| `1.21.10` | 1.21.10 | Gradle 8.8 + JDK 21 |
 
 See [docs/VERSIONING.md](docs/VERSIONING.md) for the NeoForge coordinates, plugin requirements,
 icon field differences and API differences of each branch.
