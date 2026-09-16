@@ -43,16 +43,23 @@
 
 | 分支 | 主类注解 | 配置 spec | 配置界面 |
 | --- | --- | --- | --- |
-| 26.x / 1.21.x | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | `ConfigurationScreen`（内置，手动注册 `IConfigScreenFactory`） |
-| `1.20.6` | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | 无内置，自己实现 `IConfigScreenFactory.createScreen` |
-| `1.20.4` | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | `IConfigScreenFactory` 不存在，交给 `ConfigScreenHandler` |
-| `1.20.1` | `@Mod` 无 `dist`，用 `@OnlyIn` | `minecraftforge.common.ForgeConfigSpec` | 交给 `ConfigScreenHandler`，无需注册 |
+| 26.x / 1.21.x | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | 注册 `IConfigScreenFactory` + 内置 `ConfigurationScreen` |
+| `1.20.6` | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | 注册 `IConfigScreenFactory`，**界面自己写** |
+| `1.20.4` | `@Mod` 无 `dist`，用 `@OnlyIn` | `neoforge.common.ModConfigSpec` | 注册 `ConfigScreenHandler.ConfigScreenFactory`，界面自己写 |
+| `1.20.1` | `@Mod` 无 `dist`，用 `@OnlyIn` | `minecraftforge.common.ForgeConfigSpec` | 注册 `ConfigScreenHandler.ConfigScreenFactory`，界面自己写 |
+
+**配置界面不会自动出现，必须显式注册一个工厂。** 反汇编 `ConfigScreenHandler` / `getScreenFactoryFor`
+可以看到它的逻辑就是 `ModList.getModContainerById(modId).flatMap(c -> c.getCustomExtension(...))`
+—— 只取模组自己注册的扩展点；没注册就没有「配置」按钮。1.20.1 / 1.20.4 / 1.20.6 三条分支的界面是同一份
+`client/SimpleOffhandConfigScreen`，只有两处随版本变：配置界面的 import，以及
+`Screen.renderBackground` 的签名（1.20.1 是单参 `(GuiGraphics)`，1.20.4 起是四参
+`(GuiGraphics, int, int, float)`）。
 
 其它：
 
 | | |
 | --- | --- |
-| `ModContainer.registerConfig` | 1.21.x 有；1.20.6 有；1.20.4 **没有**（走 `ModLoadingContext.get().registerConfig`） |
+| `ModContainer.registerConfig` | 1.21.x 有；1.20.6 有；1.20.4 / 1.20.1 **没有**（走 `ModLoadingContext.get().registerConfig`） |
 | `defineList` | 1.21.x 是 4 参（带"新元素默认值"）；26.x / 1.20.x 是 3 参 |
 | 标识符类 | 1.21.11 起是 `Identifier`；1.21.10 及更早是 `ResourceLocation` |
 | 模组图标 | 26.2 用 `iconFile` + `bannerFile`；其余分支只能用 `logoFile` |
@@ -77,12 +84,27 @@
 
 ## 开发环境
 
-各分支要求的 JDK 不同（26.x = 25，1.21.x / 1.20.6 = 21，1.20.4 / 1.20.1 = 17）。**IDE 的 Gradle JVM 是工作区级设置、被所有分支共用**，切分支后必须跟着改（`.idea/gradle.xml` 的 `gradleJvm`），否则会同步失败。
+各分支要求的 JDK 不同：
+
+| 分支 | JDK |
+| --- | --- |
+| `26.x` / `26.1.2` | 25 |
+| `1.21.x` / `1.20.6` | 21 |
+| `1.20.4` / `1.20.1` | 17 |
+
+实测（`gradlew build` 逐分支跑过）：**10 条分支在各自对应的 JDK 下全部构建成功**；同一分支换用另一个 JDK
+也都能成功（Gradle 由 `toolchain` 决定编译用的 JDK，`gradle-daemon-jvm.properties` 决定守护进程用哪个）。
+所以 CLI 侧不受 Gradle JVM 影响。
+
+**但 IDE 侧只有一个 Gradle JVM 设置，且为工作区级、被所有分支共用**（`.idea/gradle.xml` 的 `gradleJvm`），
+切换分支后这个设置不会跟着变。若同步失败，先确认它是否是当前分支对应的版本。
 
 ## 未解决
 
-- **1.20.4 / 1.20.6 的配置界面是自写的**：1.20.4 不注册界面（依赖 `ConfigScreenHandler`），1.20.6 自写了 `client/SimpleOffhandConfigScreen`。实际外观与可用性都没验证过。
+- **1.20.1 / 1.20.4 / 1.20.6 的配置界面没在游戏里点开过**：三条分支的界面是同一份自写实现，构建通过、
+  模组能加载，但界面实际渲染与读写是否正常没有验证。
 - **各分支的注入是否真的生效只验证过一部分**：`1.21.1` / `1.21.8` 进世界确认过，`1.20.1` / `1.20.4` / `1.20.6` 只验证到"模组被加载"，还没进世界看手臂。
+- **IDE 的 Gradle 同步失败原因未定位**：CLI 侧 10 条分支全部正常，无法复现 IDE 的失败。需要具体的 IDE 报错文本才能继续。
 - **26.1.0 / 26.1.1 的方法名未核对**：26.1.2 是 `renderArmWithItem`，同线更早版本没验证过。
 - **渲染线程每帧读配置**：`SimpleOffhandConfig` 的两个方法每帧各调一次 `ConfigValue#get()`。暂不处理；真要做就监听 `ModConfigEvent.Loading` 把值读进字段，顺带消掉"配置未加载即读取"会抛 `IllegalStateException` 的隐患。
 - **注入是否真的生效只能进游戏看**：方法名或参数类型写错**不会编译报错**，运行期才抛 `Mixin apply failed`。进游戏、空着副手看第一人称，日志里出现 `[SimpleOffhand/]: Offhand arm rendering active (injection applied).` 即为生效。
