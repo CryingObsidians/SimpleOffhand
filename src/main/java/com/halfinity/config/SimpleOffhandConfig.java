@@ -96,4 +96,27 @@ public final class SimpleOffhandConfig {
     private static boolean isValidItemId(Object entry) {
         return entry instanceof String id && ResourceLocation.tryParse(id) != null;
     }
+
+    // ---- 下面是给配置界面用的访问器。界面自己控制读写时机，这里只做转发。 ----
+
+    /** 写入开关（界面用）。 */
+    public static void setEnabled(boolean value) {
+        CLIENT.modEnabled.set(value);
+    }
+
+    /** 读双手物品列表的副本。 */
+    public static List<String> getTwoHandedItems() {
+        return List.copyOf(CLIENT.twoHandedItems.get());
+    }
+
+    /** 写双手物品列表（界面用）。 */
+    public static void setTwoHandedItems(List<String> items) {
+        CLIENT.twoHandedItems.set(items);
+    }
+
+    /** 把改动落盘。 */
+    public static void save() {
+        CLIENT.modEnabled.save();
+        CLIENT.twoHandedItems.save();
+    }
 }
