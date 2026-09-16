@@ -53,7 +53,6 @@ public final class SimpleOffhandConfig {
                     .defineList(
                             "twoHandedItems",
                             DEFAULT_TWO_HANDED_ITEMS,
-                            () -> "minecraft:filled_map",
                             SimpleOffhandConfig::isValidItemId
                     );
         }
@@ -96,5 +95,33 @@ public final class SimpleOffhandConfig {
     /** 校验配置里的物品 ID 是否合法，供 {@code defineList} 使用。 */
     private static boolean isValidItemId(Object entry) {
         return entry instanceof String id && ResourceLocation.tryParse(id) != null;
+    }
+
+    // ---- 下面是给配置界面用的访问器。界面自己控制读写时机，这里只做转发。 ----
+
+    /** 某个配置项的翻译键，供配置界面取显示名。 */
+    public static String optionKey(String name) {
+        return "simpleoffhand.config." + name;
+    }
+
+    /** 写入开关（界面用）。 */
+    public static void setEnabled(boolean value) {
+        CLIENT.modEnabled.set(value);
+    }
+
+    /** 读双手物品列表的副本。 */
+    public static List<String> getTwoHandedItems() {
+        return List.copyOf(CLIENT.twoHandedItems.get());
+    }
+
+    /** 写双手物品列表（界面用）。 */
+    public static void setTwoHandedItems(List<String> items) {
+        CLIENT.twoHandedItems.set(items);
+    }
+
+    /** 把改动落盘。 */
+    public static void save() {
+        CLIENT.modEnabled.save();
+        CLIENT.twoHandedItems.save();
     }
 }
