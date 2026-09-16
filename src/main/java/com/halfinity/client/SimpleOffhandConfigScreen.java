@@ -12,13 +12,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * SimpleOffhand 的配置界面。
+ * SimpleOffhand 鐨勯厤缃晫闈€? *
+ * <p>NeoForge 20.4 鏈?ConfigScreenHandler.ConfigScreenFactory 鎵╁睍鐐癸紝浣嗕笉浼氳嚜鍔ㄧ敓鎴? * 閰嶇疆鐣岄潰锛欳onfigScreenHandler.getScreenFactoryFor 鍙細鍘诲彇妯＄粍鑷繁娉ㄥ唽鐨勯偅涓墿灞曠偣
+ * 锛圡odContainer.getCustomExtension锛夛紝娌℃敞鍐屽氨娌℃湁銆岄厤缃€嶆寜閽€傛墍浠ヨ繖閲岃嚜鍐欎竴涓€?/p>
  *
- * <p>NeoForge 20.4 有 ConfigScreenHandler.ConfigScreenFactory 扩展点，但不会自动生成
- * 配置界面：ConfigScreenHandler.getScreenFactoryFor 只会去取模组自己注册的那个扩展点
- * （ModContainer.getCustomExtension），没注册就没有「配置」按钮。所以这里自写一个。</p>
- *
- * <p>只用最基础的 Screen API，避免依赖各版本之间会变动的 widget 工具类。</p>
+ * <p>鍙敤鏈€鍩虹鐨?Screen API锛岄伩鍏嶄緷璧栧悇鐗堟湰涔嬮棿浼氬彉鍔ㄧ殑 widget 宸ュ叿绫汇€?/p>
  */
 public class SimpleOffhandConfigScreen extends Screen {
 
@@ -27,7 +25,7 @@ public class SimpleOffhandConfigScreen extends Screen {
     private EditBox twoHandedItemsBox;
     private Button toggleButton;
 
-    /** ConfigScreenHandler.ConfigScreenFactory 要求的构造器签名。 */
+    /** ConfigScreenHandler.ConfigScreenFactory 瑕佹眰鐨勬瀯閫犲櫒绛惧悕銆?*/
     public SimpleOffhandConfigScreen(net.minecraft.client.Minecraft minecraft, Screen parent) {
         super(Component.translatable("simpleoffhand.configuration.title"));
         this.parent = parent;
