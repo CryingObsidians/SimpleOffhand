@@ -24,7 +24,13 @@ base {
     archivesName = mod_id
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+// 源码里有中文注释，必须显式指定 UTF-8：否则 javac 会在 Windows 上用平台默认编码
+// （GBK）读取，直接把中文注释报成"编码 GBK 的不可映射字符"。
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
 
 neoForge {
     // Specify the version of NeoForge to use.

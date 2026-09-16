@@ -53,7 +53,6 @@ public final class SimpleOffhandConfig {
                     .defineList(
                             "twoHandedItems",
                             DEFAULT_TWO_HANDED_ITEMS,
-                            () -> "minecraft:filled_map",
                             SimpleOffhandConfig::isValidItemId
                     );
         }
