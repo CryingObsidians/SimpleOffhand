@@ -5,6 +5,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.neoforged.neoforge.client.ConfigScreenHandler;
 
@@ -12,11 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * SimpleOffhand 鐨勯厤缃晫闈€? *
- * <p>NeoForge 20.4 鏈?ConfigScreenHandler.ConfigScreenFactory 鎵╁睍鐐癸紝浣嗕笉浼氳嚜鍔ㄧ敓鎴? * 閰嶇疆鐣岄潰锛欳onfigScreenHandler.getScreenFactoryFor 鍙細鍘诲彇妯＄粍鑷繁娉ㄥ唽鐨勯偅涓墿灞曠偣
- * 锛圡odContainer.getCustomExtension锛夛紝娌℃敞鍐屽氨娌℃湁銆岄厤缃€嶆寜閽€傛墍浠ヨ繖閲岃嚜鍐欎竴涓€?/p>
+ * SimpleOffhand 的配置界面。
  *
- * <p>鍙敤鏈€鍩虹鐨?Screen API锛岄伩鍏嶄緷璧栧悇鐗堟湰涔嬮棿浼氬彉鍔ㄧ殑 widget 宸ュ叿绫汇€?/p>
+ * <p>NeoForge 20.4 有 ConfigScreenHandler，但不会自动生成配置界面
+ * （只读取模组自己注册的扩展点），所以这里自写一个。</p>
+ *
+ * <p>只用最基础的 Screen API + CommonComponents，避免依赖各版本之间会变动的
+ * widget 工具类。</p>
  */
 public class SimpleOffhandConfigScreen extends Screen {
 
@@ -25,7 +28,7 @@ public class SimpleOffhandConfigScreen extends Screen {
     private EditBox twoHandedItemsBox;
     private Button toggleButton;
 
-    /** ConfigScreenHandler.ConfigScreenFactory 瑕佹眰鐨勬瀯閫犲櫒绛惧悕銆?*/
+    /** ConfigScreenHandler.ConfigScreenFactory 要求的构造器签名。 */
     public SimpleOffhandConfigScreen(net.minecraft.client.Minecraft minecraft, Screen parent) {
         super(Component.translatable("simpleoffhand.configuration.title"));
         this.parent = parent;
@@ -48,16 +51,16 @@ public class SimpleOffhandConfigScreen extends Screen {
         this.twoHandedItemsBox.setValue(String.join(", ", SimpleOffhandConfig.getTwoHandedItems()));
         addRenderableWidget(this.twoHandedItemsBox);
 
-        addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> save())
+        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> save())
                 .bounds(centerX - 100, y + 80, 95, 20).build());
-        addRenderableWidget(Button.builder(Component.translatable("gui.cancel"), b -> onClose())
+        addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, b -> onClose())
                 .bounds(centerX + 5, y + 80, 95, 20).build());
     }
 
     private Component toggleLabel() {
-        return Component.translatable("simpleoffhand.config.modEnabled")
-                .append(": ")
-                .append(Component.translatable(this.enabled ? "options.on" : "options.off"));
+        return CommonComponents.optionNameValue(
+                Component.translatable("simpleoffhand.config.modEnabled"),
+                CommonComponents.optionStatus(this.enabled));
     }
 
     private void save() {
