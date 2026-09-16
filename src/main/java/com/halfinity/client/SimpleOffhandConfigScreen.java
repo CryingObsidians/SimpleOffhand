@@ -15,10 +15,11 @@ import java.util.List;
 /**
  * SimpleOffhand 的配置界面。
  *
- * <p>NeoForge 20.6 有 {@link IConfigScreenFactory}，但**没有内置的自动配置界面**，
- * 所以这里自己实现一个最小的：一个开关、一个逗号分隔的双手物品输入框，外加保存/取消。</p>
+ * <p>NeoForge 20.6 有 IConfigScreenFactory，但没有内置的自动配置界面
+ * （ConfigurationScreen 要到 20.5 之后才有），所以这里自写一个。</p>
  *
- * <p>只用最基础的 {@link Screen} API，避免依赖各版本之间会变动的 widget 工具类。</p>
+ * <p>只用最基础的 Screen API + CommonComponents，避免依赖各版本之间会变动的
+ * widget 工具类。</p>
  */
 public class SimpleOffhandConfigScreen extends Screen {
 
@@ -27,7 +28,7 @@ public class SimpleOffhandConfigScreen extends Screen {
     private EditBox twoHandedItemsBox;
     private Button toggleButton;
 
-    /** {@link IConfigScreenFactory} 要求的构造器签名。 */
+    /** IConfigScreenFactory 要求的构造器签名。 */
     public SimpleOffhandConfigScreen(net.minecraft.client.Minecraft minecraft, Screen parent) {
         super(Component.translatable("simpleoffhand.configuration.title"));
         this.parent = parent;
@@ -57,9 +58,9 @@ public class SimpleOffhandConfigScreen extends Screen {
     }
 
     private Component toggleLabel() {
-        Component state = CommonComponents.optionStatus(this.enabled);
         return CommonComponents.optionNameValue(
-                Component.translatable("simpleoffhand.config.modEnabled"), state);
+                Component.translatable("simpleoffhand.config.modEnabled"),
+                CommonComponents.optionStatus(this.enabled));
     }
 
     private void save() {
@@ -89,8 +90,6 @@ public class SimpleOffhandConfigScreen extends Screen {
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, this.height / 4 - 20, 0xFFFFFF);
-
-        // 两个配置项各自的中文标签
         graphics.drawString(this.font,
                 Component.translatable("simpleoffhand.config.twoHandedItems"),
                 this.width / 2 - 100, this.height / 4 + 66, 0xA0A0A0);
