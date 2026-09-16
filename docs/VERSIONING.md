@@ -58,10 +58,31 @@
 | 模组图标 | 26.2 用 `iconFile` + `bannerFile`；其余分支只能用 `logoFile` |
 | 编译编码 | 中文注释必须显式 `options.encoding = 'UTF-8'`，否则 Windows 上 javac 用 GBK 读取会报不可映射字符 |
 
+## 模组元数据（mods.toml）
+
+**文件名写错会让模组静默不加载** —— FML 只会去找它认识的文件名，其余一律忽略，既不报错也不出现在模组列表里。
+
+| 分支 | 模板文件名 | 依赖声明字段 | `loaderVersion` |
+| --- | --- | --- | --- |
+| `26.x` / `1.21.x` | `neoforge.mods.toml` | `type = "required"` | `[4,)` 起即可 |
+| `1.20.6` | `neoforge.mods.toml` | `type = "required"` | `[3.0.45,)` |
+| `1.20.4` | **`mods.toml`** | `type = "required"` | `[2,)` |
+| `1.20.1` | **`mods.toml`** | **`mandatory = true`** | `[47,)` |
+
+三个容易踩的点：
+
+1. **文件名分界在 1.20.6**：20.4 及更早只认 `mods.toml`（20.4.251 自己 jar 里就是 `mods.toml`），20.6 起改成 `neoforge.mods.toml`。
+2. **依赖字段分界在 Forge / NeoForge**：1.20.1 的 Forge 只认 `mandatory = true`，用 `type` 报 `Missing required field mandatory`；而 NeoForge 20.4 反过来**拒绝** `mandatory`（`InvalidModFileException: Deprecated 'mandatory' field is used`），只认 `type = "required"`。
+3. **`loaderVersion` 不是 FML 版本**：对 NeoForge 它是 **javafml 语言加载器版本**，取值等于该线的 FancyModLoader 版本（20.4 → `2.0`，20.6 → `3.0.45`，21.1 → `4.0.44`，21.8 → `9.0.18`，21.10/21.11 → `10.0.x`，26.x → `11.0.x`；而 1.20.1 的 Forge 用 FML 版本 `47.2.2`）。写小了会报 `Missing language javafml version [x,) wanted by main, found y`。
+
+## 开发环境
+
+各分支要求的 JDK 不同（26.x = 25，1.21.x / 1.20.6 = 21，1.20.4 / 1.20.1 = 17）。**IDE 的 Gradle JVM 是工作区级设置、被所有分支共用**，切分支后必须跟着改（`.idea/gradle.xml` 的 `gradleJvm`），否则会同步失败。
+
 ## 未解决
 
-- **1.20.x 三项都只到"构建通过"**：`1.20.1` / `1.20.4` / `1.20.6` 都还没进游戏验证。
-- **1.20.4 / 1.20.6 的配置界面是自写的**：1.20.4 干脆不注册界面（依赖 `ConfigScreenHandler`），1.20.6 自写了 `client/SimpleOffhandConfigScreen`。两者的实际外观与可用性都没验证过。
+- **1.20.4 / 1.20.6 的配置界面是自写的**：1.20.4 不注册界面（依赖 `ConfigScreenHandler`），1.20.6 自写了 `client/SimpleOffhandConfigScreen`。实际外观与可用性都没验证过。
+- **各分支的注入是否真的生效只验证过一部分**：`1.21.1` / `1.21.8` 进世界确认过，`1.20.1` / `1.20.4` / `1.20.6` 只验证到"模组被加载"，还没进世界看手臂。
 - **26.1.0 / 26.1.1 的方法名未核对**：26.1.2 是 `renderArmWithItem`，同线更早版本没验证过。
 - **渲染线程每帧读配置**：`SimpleOffhandConfig` 的两个方法每帧各调一次 `ConfigValue#get()`。暂不处理；真要做就监听 `ModConfigEvent.Loading` 把值读进字段，顺带消掉"配置未加载即读取"会抛 `IllegalStateException` 的隐患。
 - **注入是否真的生效只能进游戏看**：方法名或参数类型写错**不会编译报错**，运行期才抛 `Mixin apply failed`。进游戏、空着副手看第一人称，日志里出现 `[SimpleOffhand/]: Offhand arm rendering active (injection applied).` 即为生效。
