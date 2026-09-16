@@ -22,8 +22,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 1.21.1（`minecraft_version_range=[1.21.1]`） |
-| NeoForge | 21.1.250（loader `4+`） |
+| Minecraft | 1.20.6（`minecraft_version_range=[1.20.6]`） |
+| NeoForge | 20.6.141（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -76,7 +76,7 @@ if (itemStack.isEmpty()) {
 
 ### 相关项目
 
-1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.21.1 的实现。
+1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.20.6 的实现。
 
 ### 多版本
 
@@ -99,8 +99,8 @@ Special case: **when a map is held in the main hand**, vanilla's main-hand rende
 
 | | |
 | --- | --- |
-| Minecraft | 1.21.1 (`minecraft_version_range=[1.21.1]`) |
-| NeoForge | 21.1.250 (loader `4+`) |
+| Minecraft | 1.20.6 (`minecraft_version_range=[1.20.6]`) |
+| NeoForge | 20.6.141 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
