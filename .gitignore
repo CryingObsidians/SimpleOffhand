@@ -21,12 +21,9 @@ build
 .gradle
 
 # other
-eclipse
 run
-runs
-run-data
 
-repo
+# datagen cache
 /src/generated/resources/.cache/*
 
 # os / editor
