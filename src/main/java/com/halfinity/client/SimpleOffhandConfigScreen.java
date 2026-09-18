@@ -16,29 +16,47 @@ import java.util.List;
  * 1.20.6 / 1.20.4 / 1.20.1 没有可用的内置配置界面（已用 {@code javap} 确认 20.6 的 jar 里
  * 根本不存在 {@code ConfigurationScreen}），所以只能自己写。</p>
  *
- * <h2>为什么不用任何原版控件</h2>
+ * <h2>为什么不用任何原版控件，也不调 super.render()</h2>
  *
  * <p>起初用的是 {@code addRenderableWidget} + {@code Button}/{@code EditBox}，靠
  * {@code super.render()} 画控件。实测在游戏里这套控件**一个都没显示出来**（只有
  * {@code render} 里手写的文字画出来了），所以现在改成：<b>全部自己画、自己处理点击</b>，
- * 一个原版控件都不用。这样渲染路径完全在自己手里，不存在"控件没被画"的可能。</p>
+ * 一个原版控件都不用。</p>
+ *
+ * <p>由此还带来一个必须注意的点：<b>{@code render} 里不能再调 {@code super.render(...)}</b>。
+ * {@code Screen#render} 的第一步就是 {@code renderBackground} →
+ * {@code renderBlurredBackground} → {@code GameRenderer.processBlurEffect}，
+ * 那是针对主渲染目标的<b>后处理模糊</b>（半径由「菜单背景模糊程度」决定，
+ * 默认 0.5 → 半径 5.0）。它会把整帧里已经画好的内容一起糊掉，表现就是整个配置界面蒙上一层
+ * 毛玻璃，而且被凸显的按钮其实在它下面、根本凸显不出来。本界面没有任何注册进
+ * {@code renderables} 的原版控件，所以省掉 {@code super.render()} 既无副作用，
+ * 又能彻底避免那次模糊。</p>
  *
  * <p>为了三条件共用同一份代码，这里也刻意不用 {@code ObjectSelectionList}
  * （它的 {@code Entry#render} 参数个数在 1.20.1/1.20.4 之间改过，
  * {@code mouseScrolled} 的签名也不同）。</p>
- *
- * <p>与版本相关的差异只剩 {@code renderBackground} 的签名
- * （1.20.1 是单参，1.20.4 起是四参），已在各分支就地改好。</p>
  */
 public class SimpleOffhandConfigScreen extends Screen {
 
-    // ---- 布局（整块内容在屏幕中垂直居中）----
-    private static final int PANEL_WIDTH = 220;
-    private static final int ROW_HEIGHT = 20;
-    private static final int VISIBLE_ROWS = 6;
-    private static final int BUTTON_HEIGHT = 20;
-    private static final int GAP = 6;
-    private static final int LABEL_HEIGHT = 10;
+    // ---- 布局（全部按屏幕尺寸等比缩放，不留任何绝对坐标）----
+    /** 设计基准尺寸：面板宽度和最大行数，实际尺寸由 scale 缩放到屏幕内。 */
+    private static final int DESIGN_WIDTH = 220;
+    private static final int DESIGN_ROWS = 6;
+
+    /** 屏幕内的最小值/最大值，保证缩放后仍可点。 */
+    private static final int MIN_ROW_HEIGHT = 9;
+    private static final int MAX_ROW_HEIGHT = 20;
+    private static final int MIN_BUTTON_HEIGHT = 10;
+    private static final int MAX_BUTTON_HEIGHT = 20;
+
+    // 这些都由 refreshLayout() 按当前屏幕算出
+    private int panelWidth;
+    private int rowHeight;
+    private int buttonHeight;
+    private int gap;
+    private int labelHeight;
+    private int pad;
+    private int visibleRows;
 
     private static final int COLOR_SCRIM = 0xFF000000;     // 最底下一层，保证不透明
     private static final int COLOR_PANEL = 0xFF1A1A1A;     // 面板
@@ -95,63 +113,108 @@ public class SimpleOffhandConfigScreen extends Screen {
     // ------------------------------------------------------------------ 布局
 
     private int labelList() {
-        return top + BUTTON_HEIGHT + GAP;
+        return this.top + this.buttonHeight + this.gap;
     }
 
     private int rowAreaTop() {
-        return labelList() + LABEL_HEIGHT + 2;
+        return labelList() + this.labelHeight + 2;
     }
 
     private int inputY() {
-        return rowAreaTop() + VISIBLE_ROWS * ROW_HEIGHT + GAP;
+        return rowAreaTop() + this.visibleRows * this.rowHeight + this.gap;
     }
 
     private int addY() {
-        return inputY() + BUTTON_HEIGHT + GAP;
+        return inputY() + this.buttonHeight + this.gap;
     }
 
     private int footerY() {
-        return addY() + BUTTON_HEIGHT + GAP;
+        return addY() + this.buttonHeight + this.gap;
     }
 
-    private static int contentHeight() {
-        return BUTTON_HEIGHT + GAP                    // 开关
-                + LABEL_HEIGHT + 2 + VISIBLE_ROWS * ROW_HEIGHT   // 列表
-                + GAP + BUTTON_HEIGHT                 // 输入框
-                + GAP + BUTTON_HEIGHT                 // 添加
-                + GAP + BUTTON_HEIGHT;                // 完成 / 取消
+    private int contentHeight() {
+        return this.buttonHeight + this.gap                                   // 开关
+                + this.labelHeight + 2 + this.visibleRows * this.rowHeight    // 列表
+                + this.gap + this.buttonHeight                                // 输入框
+                + this.gap + this.buttonHeight                                // 添加
+                + this.gap + this.buttonHeight;                               // 完成 / 取消
     }
 
     private int maxScroll() {
-        return Math.max(0, this.items.size() - VISIBLE_ROWS);
+        return Math.max(0, this.items.size() - this.visibleRows);
     }
 
-    private void layout() {
-        this.left = (this.width - PANEL_WIDTH) / 2;
-        int contentHeight = contentHeight() + 2 * (LABEL_HEIGHT + 6);
-        this.top = Math.max((this.height - contentHeight) / 2, this.height / 6 + 24);
+    /**
+     * 按当前屏幕尺寸等比缩放出一套尺寸，并按可见高度决定显示几行。
+     *
+     * <p>之前用的是固定像素 + 屏幕居中，窗口一拉宽变矮，下面的按钮就跑出屏幕外，
+     * 点也点不到。现在所有尺寸都由屏幕尺寸推出来，并且先保证「开关 / 列表 / 输入框 /
+     * 添加 / 完成取消」这一整块能塞进屏幕，塞不下就少显示几行、再不行就整体缩小。</p>
+     */
+    private void refreshLayout() {
+        int safeWidth = Math.max(120, this.width - 20);
+        int safeHeight = Math.max(80, this.height - 16);
+
+        this.panelWidth = Math.min(DESIGN_WIDTH, safeWidth);
+        this.pad = Math.max(2, this.panelWidth / 16);
+        this.gap = clamp(this.panelWidth / 40, 2, 6);
+        this.labelHeight = clamp(this.panelWidth / 22, 8, 10);
+        this.buttonHeight = clamp(this.panelWidth / 10, MIN_BUTTON_HEIGHT, MAX_BUTTON_HEIGHT);
+
+        // 先按最大行数算，塞不进就减行，再塞不进就压行高
+        this.visibleRows = DESIGN_ROWS;
+        this.rowHeight = MAX_ROW_HEIGHT;
+        int fixedHeight = this.buttonHeight * 4 + this.gap * 4 + this.labelHeight + 2;
+        int available = safeHeight - fixedHeight - this.labelHeight - 4;
+
+        if (available < this.visibleRows * MIN_ROW_HEIGHT) {
+            int fits = available / MIN_ROW_HEIGHT;
+            this.visibleRows = clamp(fits, 1, DESIGN_ROWS);
+            this.rowHeight = MIN_ROW_HEIGHT;
+        } else if (available < this.visibleRows * MAX_ROW_HEIGHT) {
+            this.rowHeight = clamp(available / this.visibleRows, MIN_ROW_HEIGHT, MAX_ROW_HEIGHT);
+        }
+
+        // 标题单独占一行，放在面板上方
+        int titleRow = labelHeight + 4;
+        int totalHeight = titleRow + contentHeight();
+        this.top = Math.max(2, (this.height - totalHeight) / 2) + titleRow;
+        this.left = (this.width - this.panelWidth) / 2;
         this.listTop = rowAreaTop();
 
-        this.toggleRect = new int[] { this.left, this.top, PANEL_WIDTH, BUTTON_HEIGHT };
-        this.inputRect = new int[] { this.left, inputY(), PANEL_WIDTH, BUTTON_HEIGHT };
-        this.addRect = new int[] { this.left, addY(), PANEL_WIDTH, BUTTON_HEIGHT };
-        this.doneRect = new int[] { this.left, footerY(), PANEL_WIDTH / 2 - 2, BUTTON_HEIGHT };
-        this.cancelRect = new int[] { this.left + PANEL_WIDTH / 2 + 2, footerY(),
-                PANEL_WIDTH / 2 - 2, BUTTON_HEIGHT };
-        this.prevRect = new int[] { this.left + PANEL_WIDTH - 44, labelList(), 20, LABEL_HEIGHT + 2 };
-        this.nextRect = new int[] { this.left + PANEL_WIDTH - 22, labelList(), 20, LABEL_HEIGHT + 2 };
+        this.toggleRect = new int[] { this.left, this.top, this.panelWidth, this.buttonHeight };
+        this.inputRect = new int[] { this.left, inputY(), this.panelWidth, this.buttonHeight };
+        this.addRect = new int[] { this.left, addY(), this.panelWidth, this.buttonHeight };
+
+        int halfWidth = (this.panelWidth - this.gap) / 2;
+        this.doneRect = new int[] { this.left, footerY(), halfWidth, this.buttonHeight };
+        this.cancelRect = new int[] { this.left + this.panelWidth - halfWidth, footerY(),
+                halfWidth, this.buttonHeight };
+
+        int arrowW = clamp(this.panelWidth / 11, 12, 20);
+        int arrowH = this.labelHeight;
+        int arrowY = labelList();
+        this.prevRect = new int[] { this.left + this.panelWidth - arrowW * 2 - 2, arrowY, arrowW, arrowH };
+        this.nextRect = new int[] { this.left + this.panelWidth - arrowW, arrowY, arrowW, arrowH };
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     @Override
     protected void init() {
-        layout();
+        refreshLayout();
         rebuildRemoveRects();
     }
 
     private void rebuildRemoveRects() {
         this.removeRects.clear();
+        int removeW = this.buttonHeight;
+        int removeH = Math.max(8, this.rowHeight - 2);
         for (int i = 0; i < this.items.size(); i++) {
-            this.removeRects.add(new int[] { this.left + PANEL_WIDTH - 18, 0, 18, ROW_HEIGHT - 2 });
+            this.removeRects.add(new int[] {
+                    this.left + this.panelWidth - removeW - 2, 0, removeW, removeH });
         }
         positionRemoveRects();
     }
@@ -161,8 +224,8 @@ public class SimpleOffhandConfigScreen extends Screen {
         for (int i = 0; i < this.removeRects.size(); i++) {
             int slot = i - this.scroll;
             int[] r = this.removeRects.get(i);
-            boolean onPage = slot >= 0 && slot < VISIBLE_ROWS;
-            r[1] = onPage ? this.listTop + slot * ROW_HEIGHT + 1 : Integer.MIN_VALUE;
+            boolean onPage = slot >= 0 && slot < this.visibleRows;
+            r[1] = onPage ? this.listTop + slot * this.rowHeight + 1 : Integer.MIN_VALUE;
         }
     }
 
@@ -190,7 +253,7 @@ public class SimpleOffhandConfigScreen extends Screen {
             return true;
         }
 
-        if (this.items.size() > VISIBLE_ROWS) {
+        if (this.items.size() > this.visibleRows) {
             if (hit(this.prevRect, mouseX, mouseY)) {
                 turnPage(-1);
                 return true;
@@ -278,7 +341,7 @@ public class SimpleOffhandConfigScreen extends Screen {
     }
 
     private void turnPage(int direction) {
-        this.scroll = Math.max(0, Math.min(maxScroll(), this.scroll + direction * VISIBLE_ROWS));
+        this.scroll = Math.max(0, Math.min(maxScroll(), this.scroll + direction * this.visibleRows));
         positionRemoveRects();
     }
 
@@ -300,14 +363,12 @@ public class SimpleOffhandConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        // 注意：这里**故意不调 renderBackground**。
-        // 1.20.6 的 renderBackground 会走 renderBlurredBackground ->
-        // GameRenderer.processBlurEffect，那是后处理模糊，会把当前渲染目标里**已经画好的东西
-        // 一起糊掉**，于是整个配置界面都像蒙了一层毛玻璃。改成自己铺不透明底。
+        // 自己铺不透明底。注意不能改用 renderBackground：见类注释，
+        // 它会触发后处理模糊，把整帧已经画好的内容一起糊掉。
         g.fill(0, 0, this.width, this.height, COLOR_SCRIM);
 
-        int panelBottom = footerY() + BUTTON_HEIGHT + 10;
-        g.fill(this.left - 10, this.top - 28, this.left + PANEL_WIDTH + 10, panelBottom, COLOR_PANEL);
+        int panelBottom = footerY() + this.buttonHeight + 10;
+        g.fill(this.left - 10, this.top - 28, this.left + this.panelWidth + 10, panelBottom, COLOR_PANEL);
 
         g.drawCenteredString(this.font, this.title, this.width / 2, this.top - 20, COLOR_TITLE);
 
@@ -317,10 +378,10 @@ public class SimpleOffhandConfigScreen extends Screen {
         // 列表标签
         g.drawString(this.font, Component.translatable("simpleoffhand.config.twoHandedItems"),
                 this.left, labelList() + 2, COLOR_LABEL);
-        if (this.items.size() > VISIBLE_ROWS) {
-            String page = (this.scroll / VISIBLE_ROWS + 1) + "/"
-                    + ((this.items.size() + VISIBLE_ROWS - 1) / VISIBLE_ROWS);
-            g.drawString(this.font, Component.literal(page), this.left + PANEL_WIDTH - 90,
+        if (this.items.size() > this.visibleRows) {
+            String page = (this.scroll / this.visibleRows + 1) + "/"
+                    + ((this.items.size() + this.visibleRows - 1) / this.visibleRows);
+            g.drawString(this.font, Component.literal(page), this.left + this.panelWidth - 90,
                     labelList() + 2, COLOR_LABEL);
             drawButton(g, this.prevRect, Component.literal("<"), mouseX, mouseY);
             drawButton(g, this.nextRect, Component.literal(">"), mouseX, mouseY);
@@ -337,7 +398,12 @@ public class SimpleOffhandConfigScreen extends Screen {
         drawButton(g, this.doneRect, CommonComponents.GUI_DONE, mouseX, mouseY);
         drawButton(g, this.cancelRect, CommonComponents.GUI_CANCEL, mouseX, mouseY);
 
-        super.render(g, mouseX, mouseY, partialTick);
+        // 这里**绝对不能调 super.render(...)**。
+        // Screen#render 的第一步就是 renderBackground -> renderBlurredBackground ->
+        // GameRenderer.processBlurEffect，那是对主渲染目标做后处理模糊，会把整帧已经画好的
+        // 内容一起糊掉 —— 表现就是整个配置界面蒙一层毛玻璃（后面什么都没有被凸显出来）。
+        // 本界面完全没有用 addRenderableWidget 注册的原版控件，所以 super.render 无事可做，
+        // 省掉它既没有副作用，又能彻底避开那次模糊。
     }
 
     private Component toggleLabel() {
@@ -353,12 +419,12 @@ public class SimpleOffhandConfigScreen extends Screen {
             return;
         }
 
-        int last = Math.min(this.items.size(), this.scroll + VISIBLE_ROWS);
+        int last = Math.min(this.items.size(), this.scroll + this.visibleRows);
         for (int i = this.scroll; i < last; i++) {
             int slot = i - this.scroll;
-            int rowY = this.listTop + slot * ROW_HEIGHT;
+            int rowY = this.listTop + slot * this.rowHeight;
 
-            String text = this.font.plainSubstrByWidth(this.items.get(i), PANEL_WIDTH - 32);
+            String text = this.font.plainSubstrByWidth(this.items.get(i), this.panelWidth - 32);
             g.drawString(this.font, Component.literal(text), this.left + 4, rowY + 6, COLOR_ITEM);
 
             drawButton(g, this.removeRects.get(i), Component.literal("x"), mouseX, mouseY);
