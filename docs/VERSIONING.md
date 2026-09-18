@@ -20,7 +20,43 @@
 `net.neoforged.moddev.legacyforge`，其扩展名是 `legacyForge`，版本必须写成
 `enable { neoForgeVersion = ... }`（extension 上的 `version =` 走的是 `forgeVersion`）。
 
+legacyforge 插件还有两处与新版插件不同：
+
+- **run 类型只认 `server` / `data` / `client` / `gameTestServer` 四种**。
+  照抄新版 `build.gradle` 里的 `clientData()` 会让 IDE 同步直接失败：
+  `Failed for task ':prepareDataRun'. Trying to prepare unknown run: clientData`。
+- **mixin 配置的注册方式不同**（见「1.20.1 的 mixin 未生效」一节）。
+
 1.21.4 / 1.21.5 等不计划做。
+
+## 1.20.1 的 mixin 未生效（未解决）
+
+**现状：1.20.1 分支的模组能正常加载，但 mixin 完全没有被应用**，所以空副手不渲染。
+
+判定方法（可复现）：在注入方法开头插一条无条件日志，再在 `mixins.json` 的 `client`
+列表里加一个不存在的类名。进世界后：
+
+- 无条件日志 0 次调用 → 注入方法从未执行；
+- 不存在的类名**也没有报错** → `mixins.json` 根本没被 Mixin 读取。
+
+已经试过、都无效的三种注册方式：
+
+| 方式 | 结果 |
+| --- | --- |
+| `mods.toml` 里写 `[[mixins]] config = "..."`（其他地方一直这么用） | 无效 |
+| jar manifest 写 `MixinConfigs` 属性 | 无效（且开发环境跑的是目录不是 jar，manifest 本就不参与） |
+| 插件提供的 `mixin.add(sourceSets.main, "...")` | 需要在编译路径上有 mixin 注解处理器产出 refmap；缺了会在 `reobfJar` 阶段报 `FileNotFoundException: build/mixin/<config>.mappings.tsrg` |
+
+已查明的机制：legacyforge 插件会给 run 任务设置 `mixin.env.remapRefMap` 与
+`mixin.env.refMapRemappingFile`，说明它是**按"有 refmap"设计的**；而 refmap 需要
+`org.spongepowered:mixin:<ver>:processor` 这个注解处理器，本机缓存里只有 mixin 的
+运行时 jar、没有 `processor` 制品，且 `repo.spongepowered.org` 在当前网络下不可达。
+
+下一步方向（按优先级）：
+
+1. 让网络能取到 mixin 注解处理器，然后启用 `annotationProcessor "org.spongepowered:mixin:0.8.5:processor"`
+   配合 `mixin.add(...)`；
+2. 若注解处理器仍不可得，改用 Forge 1.20.1 的渲染事件/钩子实现同一效果，绕开 Mixin。
 
 ## Mixin 类与方法
 
