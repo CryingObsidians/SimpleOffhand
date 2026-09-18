@@ -3,8 +3,10 @@ package com.halfinity.client;
 import com.halfinity.config.SimpleOffhandConfig;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -266,21 +268,25 @@ public class SimpleOffhandConfigScreen extends Screen {
         this.inputFocused = false;
 
         if (hit(this.toggleRect, mouseX, mouseY)) {
+            playClickSound();
             this.enabled = !this.enabled;
             return true;
         }
 
         if (hit(this.addRect, mouseX, mouseY)) {
+            playClickSound();
             addTypedItem();
             return true;
         }
 
         if (this.items.size() > this.visibleRows) {
             if (hit(this.prevRect, mouseX, mouseY)) {
+                playClickSound();
                 turnPage(-1);
                 return true;
             }
             if (hit(this.nextRect, mouseX, mouseY)) {
+                playClickSound();
                 turnPage(1);
                 return true;
             }
@@ -289,6 +295,7 @@ public class SimpleOffhandConfigScreen extends Screen {
         // 每行的删除按钮
         for (int i = 0; i < this.removeRects.size(); i++) {
             if (hit(this.removeRects.get(i), mouseX, mouseY)) {
+                playClickSound();
                 this.items.remove(i);
                 this.scroll = Math.max(0, Math.min(this.scroll, maxScroll()));
                 rebuildRemoveRects();
@@ -297,16 +304,33 @@ public class SimpleOffhandConfigScreen extends Screen {
         }
 
         if (hit(this.doneRect, mouseX, mouseY)) {
+            playClickSound();
             save();
             return true;
         }
 
         if (hit(this.cancelRect, mouseX, mouseY)) {
+            playClickSound();
             onClose();
             return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /**
+     * 播放原版按钮的点击音效。
+     *
+     * <p>本界面的按钮全部是自己画的，没走 {@code AbstractWidget}，所以不会自动有声音。
+     * 这里照 {@code AbstractWidget#playDownSound} 的原实现来：
+     * {@code SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F)}。
+     * 音量跟随原版的「界面音量」设置。</p>
+     */
+    private void playClickSound() {
+        if (this.minecraft != null) {
+            this.minecraft.getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        }
     }
 
     /** 把鼠标 x 换算成光标位置，实现「点哪就把光标放哪」。 */
