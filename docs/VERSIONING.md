@@ -29,34 +29,93 @@ legacyforge 插件还有两处与新版插件不同：
 
 1.21.4 / 1.21.5 等不计划做。
 
-## 1.20.1 的 mixin 未生效（未解决）
+## 1.20.1 的 mixin 注册方式（已解决）
 
-**现状：1.20.1 分支的模组能正常加载，但 mixin 完全没有被应用**，所以空副手不渲染。
+**背景**：1.20.1 的开发环境用
+`-Dfml.modFolders=simpleoffhand%%<classes>;simpleoffhand%%<resources>`
+把 mod 以**目录形式**加载，**不是 jar**。目录没有 manifest，而 Forge 1.20.1 只从
+manifest 的 `MixinConfigs` 读取 mixin 配置列表 —— 所以配置会被**静默忽略**
+（不报错、也不生效）。其它分支能直接用 `mods.toml` 的 `[[mixins]]`，1.20.1 不行。
 
 判定方法（可复现）：在注入方法开头插一条无条件日志，再在 `mixins.json` 的 `client`
-列表里加一个不存在的类名。进世界后：
+列表里加一个不存在的类名。若日志 0 次调用、且不存在的类名也没报错，就说明配置根本没被读取。
 
-- 无条件日志 0 次调用 → 注入方法从未执行；
-- 不存在的类名**也没有报错** → `mixins.json` 根本没被 Mixin 读取。
+### 需要的三项配置
 
-已经试过、都无效的三种注册方式：
+1. **让 mixin 注解处理器跑起来**（它是生成 `refmap` / `mappings.tsrg` 的前提）：
 
-| 方式 | 结果 |
-| --- | --- |
-| `mods.toml` 里写 `[[mixins]] config = "..."`（其他地方一直这么用） | 无效 |
-| jar manifest 写 `MixinConfigs` 属性 | 无效（且开发环境跑的是目录不是 jar，manifest 本就不参与） |
-| 插件提供的 `mixin.add(sourceSets.main, "...")` | 需要在编译路径上有 mixin 注解处理器产出 refmap；缺了会在 `reobfJar` 阶段报 `FileNotFoundException: build/mixin/<config>.mappings.tsrg` |
+   ```groovy
+   dependencies {
+       annotationProcessor files('libs/mixin-0.8.5.jar')
+       // 处理器自身要用这三个
+       annotationProcessor 'com.google.code.gson:gson:2.10'
+       annotationProcessor 'com.google.guava:guava:31.1-jre'
+       annotationProcessor 'org.ow2.asm:asm:9.5'
+       annotationProcessor 'org.ow2.asm:asm-tree:9.5'
+   }
+   mixin.add(sourceSets.main, "${mod_id}.mixins.json")
+   ```
 
-已查明的机制：legacyforge 插件会给 run 任务设置 `mixin.env.remapRefMap` 与
-`mixin.env.refMapRemappingFile`，说明它是**按"有 refmap"设计的**；而 refmap 需要
-`org.spongepowered:mixin:<ver>:processor` 这个注解处理器，本机缓存里只有 mixin 的
-运行时 jar、没有 `processor` 制品，且 `repo.spongepowered.org` 在当前网络下不可达。
+   **注意：不存在单独的 `:processor` 制品**。处理器就打包在 `mixin-0.8.5.jar` 里
+   （`META-INF/services/javax.annotation.processing.Processor` 注册了
+   `MixinObfuscationProcessorInjection` / `MixinObfuscationProcessorTargets`），
+   所以直接用运行时那个 jar 即可。少了它会在 `reobfJar` 阶段报
+   `FileNotFoundException: build/mixin/<config>.mappings.tsrg`。
 
-下一步方向（按优先级）：
+2. **所有 run 加 `--mixin.config`**（开发环境的注册靠它）：
 
-1. 让网络能取到 mixin 注解处理器，然后启用 `annotationProcessor "org.spongepowered:mixin:0.8.5:processor"`
-   配合 `mixin.add(...)`；
-2. 若注解处理器仍不可得，改用 Forge 1.20.1 的渲染事件/钩子实现同一效果，绕开 Mixin。
+   ```groovy
+   runs.configureEach {
+       programArgument '--mixin.config'
+       programArgument "${mod_id}.mixins.json"
+   }
+   ```
+
+   实测：去掉这个参数 mixin 就不生效，加上就生效。它不是诊断参数，是必需项。
+
+3. **生产 jar 的 manifest 写 `MixinConfigs`**（发布产物靠它注册）：
+
+   ```groovy
+   jar {
+       exclude "${mod_id}.mixins.json"   // mixin.add 会加处理后的那份，否则 duplicate entry
+       manifest { attributes('MixinConfigs': "${mod_id}.mixins.json") }
+   }
+   ```
+
+### 验证
+
+`runClient` 进世界、空着副手看第一人称，日志出现这一行即为生效：
+
+```
+[Render thread/INFO] [SimpleOffhand/]: Offhand arm rendering active (injection applied).
+```
+
+### ⚠️ 发布 jar 的 mixin 尚未跑通（未解决）
+
+**开发环境已验证可用，但 release jar 还不行**，发布前必须处理。已实测出的三点：
+
+1. **`reobfJar` 不会重映射 mixin 类** —— jar 里仍是 named 名
+   （`renderArmWithItem`、`ItemInHandRenderer`），而生产环境的目标类用的是 SRG 名
+   （`m_109371_`）。所以生产**必须**靠 refmap 重映射。
+2. **refmap 没有被生成** —— 处理器只产出了加工版 `mixins.json`（内含 `mappings`）与
+   `mappings.tsrg`，没产出 `simpleoffhand.mixins.json.refmap.json`。
+3. **`reobfJar` 会丢掉额外加进 jar 的文件** —— 因此"把加工版配置显式塞进 jar"的做法无效，
+   final jar 里剩下的仍是 `resources` 那份原始配置（不含映射）。
+
+排查时踩过的坑（供后续参考）：Gradle 的 `exclude` 是**模式匹配**，写
+`"simpleoffhand.mixins.json"` 会把 `"simpleoffhand.mixins.json.refmap.json"` 一起匹配掉
+（前者是后者的子串），要用正则或 `it.path ==` 精确匹配；另外 `exclude` 会作用于**所有来源**，
+连自己后来加的那份也会被排除。
+
+### 附带修的问题
+
+- **`clientData()` 要改成 `data()`**：legacyforge 只认
+  `server` / `data` / `client` / `gameTestServer`，写错会让 IDE 同步失败
+  （`Trying to prepare unknown run: clientData`）。
+- **`pack.mcmeta` 缺失**：会报 `Missing metadata in pack mod:simpleoffhand`，已补
+  （`pack_format = 15`）。
+- **`loaderVersion` 勘误**：早期误以为要用 `[4,)`；实测 `--fml.fmlVersion` 是 `47.2.2`，
+  所以 `[47,)` 是对的。
 
 ## Mixin 类与方法
 
