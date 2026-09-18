@@ -58,7 +58,9 @@ neoForge {
         }
 
         data {
-            clientData()
+            // NeoForge 的 userdev config 里只有 data 这个 run type，没有 clientData。
+            // 写 clientData() 会在配置阶段直接失败：Trying to prepare unknown run: clientData
+            type = "data"
 
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
             // gameDirectory = project.file('run-data')
