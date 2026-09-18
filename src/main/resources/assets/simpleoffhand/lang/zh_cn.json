@@ -4,6 +4,8 @@
   "simpleoffhand.config.twoHandedItems": "双手物品",
   "simpleoffhand.config.twoHandedItems.tooltip": "主手持有这些物品时，不再额外画出空的副手手臂，与原版双手举图的表现保持一致。",
   "simpleoffhand.config.twoHandedItems.button": "编辑",
+  "simpleoffhand.config.add": "添加",
+  "simpleoffhand.config.empty": "（暂无物品，在下面输入物品 ID 后点「添加」）",
   "simpleoffhand.configuration.title": "SimpleOffhand",
   "simpleoffhand.configuration.section.simpleoffhand.client.toml": "SimpleOffhand 配置",
   "simpleoffhand.configuration.section.simpleoffhand.client.toml.title": "SimpleOffhand 配置"

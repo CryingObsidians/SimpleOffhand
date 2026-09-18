@@ -4,6 +4,8 @@
   "simpleoffhand.config.twoHandedItems": "Two-Handed Items",
   "simpleoffhand.config.twoHandedItems.tooltip": "While one of these is held in the main hand, the extra offhand arm is not drawn, matching vanilla's two-handed behaviour.",
   "simpleoffhand.config.twoHandedItems.button": "Edit",
+  "simpleoffhand.config.add": "Add",
+  "simpleoffhand.config.empty": "(no items yet - type an item id below and press Add)",
   "simpleoffhand.configuration.title": "SimpleOffhand",
   "simpleoffhand.configuration.section.simpleoffhand.client.toml": "SimpleOffhand Configuration",
   "simpleoffhand.configuration.section.simpleoffhand.client.toml.title": "SimpleOffhand Configuration"
