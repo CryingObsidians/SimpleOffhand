@@ -58,9 +58,9 @@ neoForge {
         }
 
         data {
-            // NeoForge 的 userdev config 里 datagen 的 run type 叫 clientData，不是 data。
-            // 注意：1.21.8 起 datagen 的 run type 叫 clientData（配 serverData），写成 data
-            // 会在配置阶段抛 Trying to prepare unknown run: data。1.21.1 及以下反过来是 data。
+            // 注意：1.21.8 起 datagen 的 run type 是 clientData / serverData，没有 data。
+            // 写成 data 会在配置阶段抛 Trying to prepare unknown run: data。
+            // （1.21.1 及以下相反，只认 data，见 VERSIONING.md）
             clientData()
 
             // example of overriding the workingDirectory set in configureEach above, uncomment if you want to use it
