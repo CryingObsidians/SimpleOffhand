@@ -20,14 +20,28 @@
 `net.neoforged.moddev.legacyforge`，其扩展名是 `legacyForge`，版本必须写成
 `enable { neoForgeVersion = ... }`（extension 上的 `version =` 走的是 `forgeVersion`）。
 
-legacyforge 插件还有两处与新版插件不同：
-
-- **run 类型只认 `server` / `data` / `client` / `gameTestServer` 四种**。
-  照抄新版 `build.gradle` 里的 `clientData()` 会让 IDE 同步直接失败：
-  `Failed for task ':prepareDataRun'. Trying to prepare unknown run: clientData`。
-- **mixin 配置的注册方式不同**（见「1.20.1 的 mixin 未生效」一节）。
+另外 legacyforge 的 mixin 注册方式也不同（见「1.20.1 的 mixin 注册方式」一节）。
 
 1.21.4 / 1.21.5 等不计划做。
+
+## datagen 的 run type 名
+
+NeoForge 各线 userdev config 提供的 run type 不同，`runs { data { ... } }` 里写错会在配置阶段
+直接失败（`Trying to prepare unknown run: xxx`），表现为 IDE 同步失败：
+
+| 分支 | `data` 块里要写 |
+| --- | --- |
+| `26.3` / `26.2` / `26.1.2` / `1.21.11` / `1.21.10` / `1.21.8` | `clientData()` |
+| `1.21.1` / `1.20.6` / `1.20.4` / `1.20.1` | `type = "data"` |
+
+各线实际提供的 run type：
+
+```
+1.21.8 起 : [client, clientData, serverData, gameTestServer, server, junit]
+1.21.1 及以下 : [client, data, gameTestServer, server, junit]
+```
+
+即 `clientData` / `serverData` 是 1.21.8 引入的，且**同线不存在 `data`**；反过来旧线只有 `data`。
 
 ## 1.20.1 的 mixin 注册方式（已解决）
 
@@ -109,9 +123,6 @@ manifest 的 `MixinConfigs` 读取 mixin 配置列表 —— 所以配置会被*
 
 ### 附带修的问题
 
-- **`clientData()` 要改成 `data()`**：legacyforge 只认
-  `server` / `data` / `client` / `gameTestServer`，写错会让 IDE 同步失败
-  （`Trying to prepare unknown run: clientData`）。
 - **`pack.mcmeta` 缺失**：会报 `Missing metadata in pack mod:simpleoffhand`，已补
   （`pack_format = 15`）。
 - **`loaderVersion` 勘误**：早期误以为要用 `[4,)`；实测 `--fml.fmlVersion` 是 `47.2.2`，
@@ -214,8 +225,8 @@ manifest 的 `MixinConfigs` 读取 mixin 配置列表 —— 所以配置会被*
 也都能成功（Gradle 由 `toolchain` 决定编译用的 JDK，`gradle-daemon-jvm.properties` 决定守护进程用哪个）。
 所以 CLI 侧不受 Gradle JVM 影响。
 
-**但 IDE 侧只有一个 Gradle JVM 设置，且为工作区级、被所有分支共用**（`.idea/gradle.xml` 的 `gradleJvm`），
-切换分支后这个设置不会跟着变。若同步失败，先确认它是否是当前分支对应的版本。
+**但 IDE 侧只有一个 Gradle JVM 设置，且为工作区级、被所有分支共用**（`.idea/gradle.xml` 的
+`gradleJvm`），切分支后不会跟着变。同步失败时先确认它是当前分支对应的 JDK。
 
 ## 未解决
 
@@ -223,7 +234,6 @@ manifest 的 `MixinConfigs` 读取 mixin 配置列表 —— 所以配置会被*
   模组能加载，但界面实际渲染与读写是否正常没有验证。
 - **各分支的注入是否真的生效只验证过一部分**：`1.21.1` / `1.21.8` 进世界确认过；`1.20.1` / `1.20.4` /
   `1.20.6` / `26.3` 只验证到"模组被加载"，还没进世界看手臂。26.3 的目标类刚被重构，尤其需要实测。
-- **IDE 的 Gradle 同步失败原因未定位**：CLI 侧各分支全部正常，无法复现 IDE 的失败。需要具体的 IDE 报错文本才能继续。
 - **26.1.0 / 26.1.1 的方法名未核对**：26.1.2 是 `renderArmWithItem`，同线更早版本没验证过。
 - **渲染线程每帧读配置**：`SimpleOffhandConfig` 的两个方法每帧各调一次 `ConfigValue#get()`。暂不处理；真要做就监听 `ModConfigEvent.Loading` 把值读进字段，顺带消掉"配置未加载即读取"会抛 `IllegalStateException` 的隐患。
 - **注入是否真的生效只能进游戏看**：方法名或参数类型写错**不会编译报错**，运行期才抛 `Mixin apply failed`。进游戏、空着副手看第一人称，日志里出现 `[SimpleOffhand/]: Offhand arm rendering active (injection applied).` 即为生效。
