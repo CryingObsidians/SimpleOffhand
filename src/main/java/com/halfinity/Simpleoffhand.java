@@ -29,13 +29,5 @@ public class Simpleoffhand {
     public Simpleoffhand(ModContainer container) {
         container.registerConfig(ModConfig.Type.CLIENT, SimpleOffhandConfig.CLIENT_SPEC);
         container.registerExtensionPoint(IConfigScreenFactory.class, SimpleOffhandConfigScreen::new);
-
-        // TEMP-DEBUG 仅用于本地截图核对界面，验证完删除
-        if (System.getProperty("simpleoffhand.debugUi") != null) {
-            net.minecraft.client.Minecraft mc = net.minecraft.client.Minecraft.getInstance();
-            mc.execute(() -> mc.setScreen(new SimpleOffhandConfigScreen(mc,
-                    new net.minecraft.client.gui.screens.TitleScreen())));
-        }
-        // TEMP-DEBUG-END
     }
 }

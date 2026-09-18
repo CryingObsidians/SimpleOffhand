@@ -300,11 +300,13 @@ public class SimpleOffhandConfigScreen extends Screen {
 
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
-        renderBackground(g, mouseX, mouseY, partialTick);
-
-        // 先铺满一层不透明黑，避免透出模糊背景显得发虚
-        int panelBottom = footerY() + BUTTON_HEIGHT + 10;
+        // 注意：这里**故意不调 renderBackground**。
+        // 1.20.6 的 renderBackground 会走 renderBlurredBackground ->
+        // GameRenderer.processBlurEffect，那是后处理模糊，会把当前渲染目标里**已经画好的东西
+        // 一起糊掉**，于是整个配置界面都像蒙了一层毛玻璃。改成自己铺不透明底。
         g.fill(0, 0, this.width, this.height, COLOR_SCRIM);
+
+        int panelBottom = footerY() + BUTTON_HEIGHT + 10;
         g.fill(this.left - 10, this.top - 28, this.left + PANEL_WIDTH + 10, panelBottom, COLOR_PANEL);
 
         g.drawCenteredString(this.font, this.title, this.width / 2, this.top - 20, COLOR_TITLE);
