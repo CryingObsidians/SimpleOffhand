@@ -5,6 +5,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +40,8 @@ import java.util.List;
  */
 public class SimpleOffhandConfigScreen extends Screen {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("SimpleOffhand");
+
     // ---- 布局（全部按屏幕尺寸等比缩放，不留任何绝对坐标）----
     /** 设计基准尺寸：面板宽度和最大行数，实际尺寸由 scale 缩放到屏幕内。 */
     private static final int DESIGN_WIDTH = 220;
@@ -68,11 +72,15 @@ public class SimpleOffhandConfigScreen extends Screen {
     private static final int COLOR_ITEM = 0xFFFFFFFF;
     private static final int COLOR_HINT = 0xFF808080;
 
-    /** Enter / Backspace / Delete 的键码。 */
+    /** Enter / Backspace / Delete / 方向键 / Home / End 的键码。 */
     private static final int KEY_ENTER = 257;
     private static final int KEY_KP_ENTER = 335;
     private static final int KEY_BACKSPACE = 259;
     private static final int KEY_DELETE = 261;
+    private static final int KEY_RIGHT = 262;
+    private static final int KEY_LEFT = 263;
+    private static final int KEY_HOME = 268;
+    private static final int KEY_END = 269;
 
     private final Screen parent;
 
@@ -80,8 +88,9 @@ public class SimpleOffhandConfigScreen extends Screen {
     private boolean enabled;
     private final List<String> items = new ArrayList<>();
 
-    /** 输入框内容与光标状态（自己实现，不用 EditBox）。 */
+    /** 输入框内容、光标位置与聚焦状态（自己实现，不用 EditBox）。 */
     private String input = "";
+    private int cursor = 0;
     private boolean inputFocused = true;
 
     /** 列表当前显示的第一项下标。 */
@@ -233,15 +242,28 @@ public class SimpleOffhandConfigScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        try {
+            return handleClick(mouseX, mouseY, button);
+        } catch (Throwable t) {
+            LOGGER.error("配置界面点击处理失败 mouseX={} mouseY={} button={}", mouseX, mouseY, button, t);
+            return false;
+        }
+    }
+
+    private boolean handleClick(double mouseX, double mouseY, int button) {
         if (button != 0) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
 
-        // 输入框：点它 = 聚焦
+        // 输入框：点它 = 聚焦，并把光标挪到点击处
         if (hit(this.inputRect, mouseX, mouseY)) {
             this.inputFocused = true;
+            this.cursor = cursorForX(mouseX);
             return true;
         }
+
+        // 点别处就失焦，避免按钮点击后光标还留在输入框里
+        this.inputFocused = false;
 
         if (hit(this.toggleRect, mouseX, mouseY)) {
             this.enabled = !this.enabled;
@@ -284,9 +306,25 @@ public class SimpleOffhandConfigScreen extends Screen {
             return true;
         }
 
-        // 点空白处 = 输入框失焦
-        this.inputFocused = false;
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /** 把鼠标 x 换算成光标位置，实现「点哪就把光标放哪」。 */
+    private int cursorForX(double mouseX) {
+        int textStart = this.inputRect[0] + this.pad + 1;
+        int offset = (int) (mouseX - textStart);
+        if (offset <= 0) {
+            return 0;
+        }
+        for (int i = 1; i <= this.input.length(); i++) {
+            int width = this.font.width(this.input.substring(0, i));
+            if (offset < width) {
+                // 落在第 i 个字符的前半就放 i-1，后半就放 i
+                int prev = this.font.width(this.input.substring(0, i - 1));
+                return (offset - prev) * 2 < (width - prev) ? i - 1 : i;
+            }
+        }
+        return this.input.length();
     }
 
     private static boolean hit(int[] r, double mx, double my) {
@@ -300,15 +338,47 @@ public class SimpleOffhandConfigScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        try {
+            return handleKey(keyCode, scanCode, modifiers);
+        } catch (Throwable t) {
+            LOGGER.error("配置界面按键处理失败 keyCode={}", keyCode, t);
+            return false;
+        }
+    }
+
+    private boolean handleKey(int keyCode, int scanCode, int modifiers) {
         if (this.inputFocused) {
             if (keyCode == KEY_ENTER || keyCode == KEY_KP_ENTER) {
                 addTypedItem();
                 return true;
             }
-            if (keyCode == KEY_BACKSPACE || keyCode == KEY_DELETE) {
-                if (!this.input.isEmpty()) {
-                    this.input = this.input.substring(0, this.input.length() - 1);
+            if (keyCode == KEY_BACKSPACE) {
+                if (this.cursor > 0) {
+                    this.input = this.input.substring(0, this.cursor - 1) + this.input.substring(this.cursor);
+                    this.cursor--;
                 }
+                return true;
+            }
+            if (keyCode == KEY_DELETE) {
+                if (this.cursor < this.input.length()) {
+                    this.input = this.input.substring(0, this.cursor) + this.input.substring(this.cursor + 1);
+                }
+                return true;
+            }
+            if (keyCode == KEY_LEFT) {
+                this.cursor = Math.max(0, this.cursor - 1);
+                return true;
+            }
+            if (keyCode == KEY_RIGHT) {
+                this.cursor = Math.min(this.input.length(), this.cursor + 1);
+                return true;
+            }
+            if (keyCode == KEY_HOME) {
+                this.cursor = 0;
+                return true;
+            }
+            if (keyCode == KEY_END) {
+                this.cursor = this.input.length();
                 return true;
             }
         }
@@ -317,12 +387,19 @@ public class SimpleOffhandConfigScreen extends Screen {
 
     @Override
     public boolean charTyped(char codePoint, int modifiers) {
-        if (this.inputFocused && this.input.length() < 64
-                && codePoint >= 32 && codePoint != 127) {
-            this.input += codePoint;
-            return true;
+        try {
+            if (this.inputFocused && this.input.length() < 64
+                    && codePoint >= 32 && codePoint != 127) {
+                // 插到光标位置，不是在末尾追加 —— 否则方向键挪了光标也没意义
+                this.input = this.input.substring(0, this.cursor) + codePoint + this.input.substring(this.cursor);
+                this.cursor++;
+                return true;
+            }
+            return super.charTyped(codePoint, modifiers);
+        } catch (Throwable t) {
+            LOGGER.error("配置界面字符输入失败 char={}", codePoint, t);
+            return false;
         }
-        return super.charTyped(codePoint, modifiers);
     }
 
     // ------------------------------------------------------------------ 增删
@@ -334,6 +411,7 @@ public class SimpleOffhandConfigScreen extends Screen {
         }
         this.items.add(value);
         this.input = "";
+        this.cursor = 0;
 
         // 新增项可能在最后一页，直接翻过去
         this.scroll = maxScroll();
@@ -361,8 +439,25 @@ public class SimpleOffhandConfigScreen extends Screen {
 
     // ------------------------------------------------------------------ 渲染
 
+    /**
+     * 渲染入口带异常保护。
+     *
+     * <p>这个界面是自己画的，一旦中间抛异常，原版会把它吞掉或直接崩客户端，而且不一定留下
+     * 堆栈。这里统一 catch 住并把完整堆栈写进日志（logger 名 {@code SimpleOffhand}），
+     * 保证「点了几下闪退」这类问题有一次可查的证据，同时不至于直接崩游戏。</p>
+     */
     @Override
     public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+        try {
+            renderScreen(g, mouseX, mouseY);
+        } catch (Throwable t) {
+            LOGGER.error("配置界面渲染失败", t);
+            // 出错时至少铺个底，别把上一帧留在屏幕上
+            g.fill(0, 0, this.width, this.height, COLOR_SCRIM);
+        }
+    }
+
+    private void renderScreen(GuiGraphics g, int mouseX, int mouseY) {
         // 自己铺不透明底。注意不能改用 renderBackground：见类注释，
         // 它会触发后处理模糊，把整帧已经画好的内容一起糊掉。
         g.fill(0, 0, this.width, this.height, COLOR_SCRIM);
@@ -431,18 +526,50 @@ public class SimpleOffhandConfigScreen extends Screen {
         }
     }
 
+    /**
+     * 自绘输入框：内容按光标位置水平滚动，聚焦时画一条闪烁光标。
+     *
+     * <p>内容比框宽时只显示光标附近的那一段，避免文字溢出框外。</p>
+     */
     private void drawField(GuiGraphics g, int mouseX, int mouseY) {
         int[] r = this.inputRect;
         g.fill(r[0], r[1], r[0] + r[2], r[1] + r[3], COLOR_FIELD);
         drawBorder(g, r, this.inputFocused ? 0xFFCFCFCF : 0xFF707070);
 
+        int textX = r[0] + this.pad + 1;
+        int textY = r[1] + (r[3] - 8) / 2;
+        int maxWidth = Math.max(4, r[2] - this.pad * 2 - 3);
+
         if (this.input.isEmpty()) {
             g.drawString(this.font, Component.literal("minecraft:filled_map"),
-                    r[0] + 5, r[1] + 6, COLOR_HINT);
+                    textX, textY, COLOR_HINT);
         } else {
-            g.drawString(this.font, Component.literal(this.input),
-                    r[0] + 5, r[1] + 6, COLOR_ITEM);
+            // 光标之前的宽度决定往左滚多少
+            int cursorWidth = this.font.width(this.input.substring(0, this.cursor));
+            int scrollX = Math.max(0, cursorWidth - maxWidth);
+            String visible = this.font.plainSubstrByWidth(
+                    this.input.substring(this.scrollFor(scrollX)), maxWidth);
+            g.drawString(this.font, Component.literal(visible), textX, textY, COLOR_ITEM);
+
+            if (this.inputFocused && (System.currentTimeMillis() / 500L) % 2L == 0L) {
+                int caretX = textX + cursorWidth - this.font.width(this.input.substring(0, this.scrollFor(scrollX)));
+                caretX = Math.max(textX, Math.min(textX + maxWidth, caretX));
+                g.fill(caretX, textY - 1, caretX + 1, textY + 9, COLOR_ITEM);
+            }
         }
+    }
+
+    /** 把「按像素滚动量」换算成要跳过的字符数（按字符宽度累加，简单但够用）。 */
+    private int scrollFor(int scrollX) {
+        if (scrollX <= 0) {
+            return 0;
+        }
+        for (int i = 1; i <= this.input.length(); i++) {
+            if (this.font.width(this.input.substring(0, i)) > scrollX) {
+                return i - 1;
+            }
+        }
+        return this.input.length();
     }
 
     /** 自己画的按钮：底色 + 居中文字，鼠标悬停变色。 */
