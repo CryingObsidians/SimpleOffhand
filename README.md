@@ -67,7 +67,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 实现方式
 
-用一个 Mixin 挂在 `FirstPersonHandsAndItemsRenderer#submitArmWithItem` 上（26.2 把原来的 `ItemInHandRenderer` 重构成了这个类，参数也从 player 实体改成了 render state）。原版的空手分支是：
+用一个 Mixin 挂在 `ItemInHandRenderer#submitArmWithItem` 上（26.2 起该方法改名为 `submitArmWithItem`）。原版的空手分支是：
 
 ```java
 if (itemStack.isEmpty()) {
