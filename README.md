@@ -22,8 +22,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 1.20.4（`minecraft_version_range=[1.20.4]`） |
-| NeoForge | 20.4.251（loader `4+`） |
+| Minecraft | 26.3（`minecraft_version_range=[26.3]`） |
+| NeoForge | 26.3.0.1-beta（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -37,12 +37,13 @@
 
 ### 配置
 
-配置文件位于 `config/simpleoffhand-client.toml`。游戏内也可以从「模组列表 → SimpleOffhand → 配置」打开自动生成的配置界面。
+配置文件位于 `config/simpleoffhand-client.toml`。游戏内从「模组列表 → SimpleOffhand → 配置」打开。
 
 > **注意：1.20.6 / 1.20.4 两条支线的配置界面是本模组手写的。**
 > 这两条线的 NeoForge **没有提供任何配置界面实现**（jar 里只有接口，没有实现类；
 > `ConfigurationScreen` 要到 NeoForge 21.1 才有），所以界面只能自己画。
 > 1.21.x / 26.x 那几条线用的是官方内置的 `ConfigurationScreen`，不受此影响。
+
 | 配置项 | 默认值 | 说明 |
 | --- | --- | --- |
 | `modEnabled` | `true` | 模组总开关。关掉后第一人称手部完全按原版渲染。 |
@@ -56,7 +57,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 从源码构建
 
-需要 JDK 17。
+需要 JDK 25。
 
 ```bash
 ./gradlew build
@@ -66,11 +67,11 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 实现方式
 
-用一个 Mixin 挂在 `ItemInHandRenderer#renderArmWithItem` 上。原版的空手分支是：
+用一个 Mixin 挂在 `FirstPersonHandsAndItemsRenderer#submitArmWithItem` 上（26.3 把原来的 `ItemInHandRenderer` 重构成了这个类，参数也从 player 实体改成了 render state）。原版的空手分支是：
 
 ```java
 if (itemStack.isEmpty()) {
-    if (isMainHand && !player.isInvisible()) {   // ← 只有主手才画
+    if (isMainHand && !avatar.isInvisible) {   // ← 只有主手才画
         this.renderPlayerArm(...);
     }
 }
@@ -80,7 +81,7 @@ if (itemStack.isEmpty()) {
 
 ### 相关项目
 
-1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.20.4 的实现。
+1.21 及更早版本上的同类模组：Visible Offhand。
 
 ### 多版本
 
@@ -103,8 +104,8 @@ Special case: **when a map is held in the main hand**, vanilla's main-hand rende
 
 | | |
 | --- | --- |
-| Minecraft | 1.20.4 (`minecraft_version_range=[1.20.4]`) |
-| NeoForge | 20.4.251 (loader `4+`) |
+| Minecraft | 26.3 (`minecraft_version_range=[26.3]`) |
+| NeoForge | 26.3.0.1-beta (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
@@ -125,6 +126,7 @@ The config file is `config/simpleoffhand-client.toml`. In game, open it from *Mo
 > interface, not an implementation; `ConfigurationScreen` only exists from NeoForge 21.1 onward),
 > so the screen had to be drawn from scratch. The 1.21.x / 26.x branches use the built-in
 > `ConfigurationScreen` and are unaffected.
+
 | Option | Default | Description |
 | --- | --- | --- |
 | `modEnabled` | `true` | Master switch. When off, first-person hands render exactly like vanilla. |
@@ -132,7 +134,7 @@ The config file is `config/simpleoffhand-client.toml`. In game, open it from *Mo
 
 ### Building
 
-Requires JDK 17.
+Requires JDK 25.
 
 ```bash
 ./gradlew build
