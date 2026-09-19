@@ -22,8 +22,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 1.20.1（`minecraft_version_range=[1.20.1]`） |
-| Forge | 47.1.106（1.20.1 上没有 NeoForge） |
+| Minecraft | 1.21.11（`minecraft_version_range=[1.21.11]`） |
+| NeoForge | 21.11.45（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -39,8 +39,8 @@
 
 配置文件位于 `config/simpleoffhand-client.toml`。游戏内从「模组列表 → SimpleOffhand → 配置」打开。
 
-> **注意：1.20.6 / 1.20.4 / 1.20.1 三条支线的配置界面是本模组手写的。**
-> 这三条线的 NeoForge / Forge **没有提供任何配置界面实现**（jar 里只有接口，没有实现类；
+> **注意：1.20.6 / 1.20.4 两条支线的配置界面是本模组手写的。**
+> 这两条线的 NeoForge **没有提供任何配置界面实现**（jar 里只有接口，没有实现类；
 > `ConfigurationScreen` 要到 NeoForge 21.1 才有），所以界面只能自己画。
 > 1.21.x / 26.x 那几条线用的是官方内置的 `ConfigurationScreen`，不受此影响。
 
@@ -57,7 +57,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 从源码构建
 
-需要 JDK 17。
+需要 JDK 21。
 
 ```bash
 ./gradlew build
@@ -81,7 +81,7 @@ if (itemStack.isEmpty()) {
 
 ### 相关项目
 
-1.21 及更早版本上的同类模组：Visible Offhand。本模组是面向 1.20.1 的实现。
+1.21 及更早版本上的同类模组：Visible Offhand。
 
 ### 多版本
 
@@ -104,8 +104,8 @@ Special case: **when a map is held in the main hand**, vanilla's main-hand rende
 
 | | |
 | --- | --- |
-| Minecraft | 1.20.1 (`minecraft_version_range=[1.20.1]`) |
-| Forge | 47.1.106 (no NeoForge for 1.20.1) |
+| Minecraft | 1.21.11 (`minecraft_version_range=[1.21.11]`) |
+| NeoForge | 21.11.45 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
@@ -121,11 +121,11 @@ This is a client-side mod that only changes first-person hand rendering — the 
 
 The config file is `config/simpleoffhand-client.toml`. In game, open it from *Mods → SimpleOffhand → Config*.
 
-> **Note: on the 1.20.6 / 1.20.4 / 1.20.1 branches the config screen is hand-written by this mod.**
-> Neither NeoForge nor Forge ships any config screen implementation for those versions (their jars
-> only contain the interface, not an implementation; `ConfigurationScreen` only exists from
-> NeoForge 21.1 onward), so the screen had to be drawn from scratch. The 1.21.x / 26.x branches use
-> the built-in `ConfigurationScreen` and are unaffected.
+> **Note: on the 1.20.6 / 1.20.4 branches the config screen is hand-written by this mod.**
+> NeoForge ships no config screen implementation for those versions (their jars only contain the
+> interface, not an implementation; `ConfigurationScreen` only exists from NeoForge 21.1 onward),
+> so the screen had to be drawn from scratch. The 1.21.x / 26.x branches use the built-in
+> `ConfigurationScreen` and are unaffected.
 
 | Option | Default | Description |
 | --- | --- | --- |
@@ -134,7 +134,7 @@ The config file is `config/simpleoffhand-client.toml`. In game, open it from *Mo
 
 ### Building
 
-Requires JDK 17.
+Requires JDK 21.
 
 ```bash
 ./gradlew build
