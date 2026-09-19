@@ -2,8 +2,6 @@
 
 ## 分支与坐标
 
-下表**不含 1.20.1** —— 那条线用的是 Forge，配置、mixin 注册方式都不同，单独写在最后一章。
-
 | 分支 | MC | 平台版本 | `*_version_range` | JDK | Gradle |
 | --- | --- | --- | --- | --- | --- |
 | `master` | 26.3 | NeoForge 26.3.0.1-beta | `[26.3.0,)` | 25 | 9.6.1 |
@@ -15,9 +13,13 @@
 | `1.21.1` | 1.21.1 | NeoForge 21.1.250 | `[21.1,)` | 21 | 8.8 |
 | `1.20.6` | 1.20.6 | NeoForge 20.6.141 | `[20.6,)` | 21 | 8.8 |
 | `1.20.4` | 1.20.4 | NeoForge 20.4.251 | `[20.4,)` | 17 | 8.8 |
-| `1.20.1` | 1.20.1 | **Forge** 47.1.106 | `[47.1.106,)` | 17 | 8.8 | ← 见最后一章
 
-1.21.4 / 1.21.5 等不计划做。
+**不做 1.20.1。** 原因：NeoForge 官方从未发布过 1.20.1 的 `net.neoforged:neoforge` 制品
+（该坐标最早的版本是 `20.2.12-beta`，对应 MC 1.20.2）。1.20.1 上能拿到的只有
+`net.neoforged:forge:1.20.1-47.1.106`，它虽然由 NeoForged 组织发布，但**包名是
+`net.minecraftforge.*`**，等于用 Forge API 开发。既然目标端是 NeoForge，这条线就不做了。
+
+1.21.4 / 1.21.5 等同样不计划做。
 
 ## datagen 的 run type 名
 
@@ -27,7 +29,7 @@
 | 分支 | `data` 块里要写 |
 | --- | --- |
 | `26.3` / `26.2` / `26.1.2` / `1.21.11` / `1.21.10` / `1.21.8` | `clientData()` |
-| `1.21.1` / `1.20.6` / `1.20.4` / `1.20.1` | `type = "data"` |
+| `1.21.1` / `1.20.6` / `1.20.4` | `type = "data"` |
 
 各线实际提供的 run type：
 
@@ -55,7 +57,6 @@ mixin 类固定是 `com.halfinity.mixin.ItemInHandRendererMixin`。
 | `1.21.1` | `renderArmWithItem` | `MultiBufferSource` |
 | `1.20.6` | `renderArmWithItem` | `MultiBufferSource` |
 | `1.20.4` | `renderArmWithItem` | `MultiBufferSource` |
-| `1.20.1` | `renderArmWithItem` | `MultiBufferSource` |
 
 全部签名已用 `javap` 核对各分支 `build/moddev/artifacts/` 里的制品确认。
 
@@ -84,13 +85,12 @@ mixin 类固定是 `com.halfinity.mixin.ItemInHandRendererMixin`。
 | 26.x / 1.21.x | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | 注册 `IConfigScreenFactory` + 内置 `ConfigurationScreen` |
 | `1.20.6` | `@Mod(dist = Dist.CLIENT)` | `neoforge.common.ModConfigSpec` | 注册 `IConfigScreenFactory`，**界面手写** |
 | `1.20.4` | `@Mod` 无 `dist`，用 `@OnlyIn` | `neoforge.common.ModConfigSpec` | 注册 `ConfigScreenHandler.ConfigScreenFactory`，界面手写 |
-| `1.20.1` | `@Mod` 无 `dist`，用 `@OnlyIn` | `minecraftforge.common.ForgeConfigSpec` | 注册 `ConfigScreenHandler.ConfigScreenFactory`，界面手写 |
 
 **配置界面不会自动出现，必须显式注册一个工厂**：`ConfigScreenHandler` / `getScreenFactoryFor`
 的逻辑就是 `ModList.getModContainerById(modId).flatMap(c -> c.getCustomExtension(...))`，
 只取模组自己注册的扩展点，没注册就没有「配置」按钮。
 
-**1.20.6 / 1.20.4 / 1.20.1 官方没有提供配置界面**（`jar` 里只有接口，没有实现类），
+**1.20.6 / 1.20.4 官方没有提供配置界面**（`jar` 里只有接口，没有实现类），
 所以这三条线的界面是手写的，见 README。`ConfigurationScreen` 从 NeoForge 21.1 才有，
 1.20.x 三条线的 jar 里都不存在这个类。
 
@@ -98,7 +98,7 @@ mixin 类固定是 `com.halfinity.mixin.ItemInHandRendererMixin`。
 
 | | |
 | --- | --- |
-| `ModContainer.registerConfig` | 1.21.x 有；1.20.6 有；1.20.4 / 1.20.1 **没有**（走 `ModLoadingContext.get().registerConfig`） |
+| `ModContainer.registerConfig` | 1.21.x 有；1.20.6 有；1.20.4 **没有**（走 `ModLoadingContext.get().registerConfig`） |
 | `defineList` | 1.21.x 是 4 参（带"新元素默认值"）；26.x / 1.20.x 是 3 参 |
 | 标识符类 | 1.21.11 起是 `Identifier`；1.21.10 及更早是 `ResourceLocation` |
 | 模组图标 | 26.2 用 `iconFile` + `bannerFile`；其余分支只能用 `logoFile` |
@@ -115,19 +115,17 @@ mixin 类固定是 `com.halfinity.mixin.ItemInHandRendererMixin`。
 | `26.2` / `26.1.2` / `1.21.x` | `neoforge.mods.toml` | `type = "required"` | `[4,)` 起即可 |
 | `1.20.6` | `neoforge.mods.toml` | `type = "required"` | `[3.0.45,)` |
 | `1.20.4` | **`mods.toml`** | `type = "required"` | `[2,)` |
-| `1.20.1` | **`mods.toml`** | **`mandatory = true`** | `[47,)` |
 
 三个容易踩的点：
 
 1. **文件名分界在 1.20.6**：20.4 及更早只认 `mods.toml`（20.4.251 自己 jar 里就是 `mods.toml`），
    20.6 起改成 `neoforge.mods.toml`。
-2. **依赖字段分界在 Forge / NeoForge**：1.20.1 的 Forge 只认 `mandatory = true`，用 `type` 报
-   `Missing required field mandatory`；而 NeoForge 20.4 反过来**拒绝** `mandatory`
-   （`InvalidModFileException: Deprecated 'mandatory' field is used`），只认 `type = "required"`。
+2. **依赖字段**：NeoForge 只认 `type = "required"`，写成 `mandatory` 会被**拒绝**
+   （`InvalidModFileException: Deprecated 'mandatory' field is used`）。
 3. **`loaderVersion` 不是 FML 版本**：对 NeoForge 它是 **javafml 语言加载器版本**，取值等于该线的
    FancyModLoader 版本（20.4 → `2.0`，20.6 → `3.0.45`，21.1 → `4.0.44`，21.8 → `9.0.18`，
-   21.10/21.11 → `10.0.x`，26.2 → `11.x`，**26.3 → `12.0`**；而 1.20.1 的 Forge 用 FML 版本
-   `47.2.2`）。写小了会报 `Missing language javafml version [x,) wanted by main, found y`。
+   21.10/21.11 → `10.0.x`，26.2 → `11.x`，**26.3 → `12.0`**）。写小了会报
+   `Missing language javafml version [x,) wanted by main, found y`。
 
 ## 开发环境
 
@@ -135,7 +133,7 @@ mixin 类固定是 `com.halfinity.mixin.ItemInHandRendererMixin`。
 | --- | --- |
 | `26.3` / `26.2` / `26.1.2` | 25 |
 | `1.21.x` / `1.20.6` | 21 |
-| `1.20.4` / `1.20.1` | 17 |
+| `1.20.4` | 17 |
 
 实测（`gradlew build` 逐分支跑过）：**各分支在对应的 JDK 下全部构建成功**；同一分支换用另一个 JDK
 也都能成功（Gradle 由 `toolchain` 决定编译用的 JDK，`gradle-daemon-jvm.properties` 决定守护进程用哪个）。
@@ -157,98 +155,3 @@ mixin 类固定是 `com.halfinity.mixin.ItemInHandRendererMixin`。
   `[SimpleOffhand/]: Offhand arm rendering active (injection applied).` 即为生效。
 
 ---
-
-# 1.20.1（Forge 线，与上面全部不同）
-
-这条线**不用 NeoForge**（NeoForge 从 1.20.2 起），用的制品是
-`net.neoforged:forge:1.20.1-47.1.106`。
-
-## 构建插件
-
-`net.neoforged.moddev.legacyforge`（不是 `net.neoforged.moddev`），扩展名是 `legacyForge`，
-版本必须写成 `enable { neoForgeVersion = ... }` —— extension 上的 `version =` 走的是 `forgeVersion`。
-
-## mixin 注册方式（开发环境已解决）
-
-**背景**：开发环境用
-`-Dfml.modFolders=simpleoffhand%%<classes>;simpleoffhand%%<resources>`
-把 mod 以**目录形式**加载，**不是 jar**。目录没有 manifest，而 Forge 1.20.1 只从 manifest 的
-`MixinConfigs` 读取 mixin 配置列表，所以配置会被**静默忽略**（不报错、也不生效）。
-其它分支能直接用 `mods.toml` 的 `[[mixins]]`，1.20.1 不行。
-
-判定方法（可复现）：在注入方法开头插一条无条件日志，再在 `mixins.json` 的 `client` 列表里加一个
-不存在的类名。若日志 0 次调用、且不存在的类名也没报错，就说明配置根本没被读取。
-
-### 需要的三项配置
-
-1. **让 mixin 注解处理器跑起来**（它是生成 `refmap` / `mappings.tsrg` 的前提）：
-
-   ```groovy
-   dependencies {
-       annotationProcessor files('libs/mixin-0.8.5.jar')
-       // 处理器自身要用这三个
-       annotationProcessor 'com.google.code.gson:gson:2.10'
-       annotationProcessor 'com.google.guava:guava:31.1-jre'
-       annotationProcessor 'org.ow2.asm:asm:9.5'
-       annotationProcessor 'org.ow2.asm:asm-tree:9.5'
-   }
-   mixin.add(sourceSets.main, "${mod_id}.mixins.json")
-   ```
-
-   **不存在单独的 `:processor` 制品**：处理器就打包在 `mixin-0.8.5.jar` 里
-   （`META-INF/services/javax.annotation.processing.Processor` 注册了
-   `MixinObfuscationProcessorInjection` / `MixinObfuscationProcessorTargets`），
-   所以直接用运行时那个 jar 即可。少了它会在 `reobfJar` 阶段报
-   `FileNotFoundException: build/mixin/<config>.mappings.tsrg`。
-
-2. **所有 run 加 `--mixin.config`**（开发环境的注册靠它）：
-
-   ```groovy
-   runs.configureEach {
-       programArgument '--mixin.config'
-       programArgument "${mod_id}.mixins.json"
-   }
-   ```
-
-   实测：去掉这个参数 mixin 就不生效，加上就生效。它不是诊断参数，是必需项。
-
-3. **生产 jar 的 manifest 写 `MixinConfigs`**（发布产物靠它注册）：
-
-   ```groovy
-   jar {
-       exclude "${mod_id}.mixins.json"   // mixin.add 会加处理后的那份，否则 duplicate entry
-       manifest { attributes('MixinConfigs': "${mod_id}.mixins.json") }
-   }
-   ```
-
-### 验证
-
-`runClient` 进世界、空着副手看第一人称，日志出现这一行即为生效：
-
-```
-[Render thread/INFO] [SimpleOffhand/]: Offhand arm rendering active (injection applied).
-```
-
-## ⚠️ 发布 jar 的 mixin 尚未跑通（未解决）
-
-**开发环境已验证可用，但 release jar 还不行**，发布前必须处理。已实测出的三点：
-
-1. **`reobfJar` 不会重映射 mixin 类** —— jar 里仍是 named 名（`renderArmWithItem`、
-   `ItemInHandRenderer`），而生产环境的目标类用的是 SRG 名（`m_109371_`）。所以生产**必须**靠
-   refmap 重映射。
-2. **refmap 没有被生成** —— 处理器只产出了加工版 `mixins.json`（内含 `mappings`）与
-   `mappings.tsrg`，没产出 `simpleoffhand.mixins.json.refmap.json`。
-3. **`reobfJar` 会丢掉额外加进 jar 的文件** —— 因此"把加工版配置显式塞进 jar"的做法无效，
-   final jar 里剩下的仍是 `resources` 那份原始配置（不含映射）。
-
-排查时踩过的坑：Gradle 的 `exclude` 是**模式匹配**，写 `"simpleoffhand.mixins.json"` 会把
-`"simpleoffhand.mixins.json.refmap.json"` 一起匹配掉（前者是后者的子串），要用正则或
-`it.path ==` 精确匹配；另外 `exclude` 会作用于**所有来源**，连自己后来加的那份也会被排除。
-
-## 附带修的问题
-
-- **`pack.mcmeta` 缺失**：会报 `Missing metadata in pack mod:simpleoffhand`，已补
-  （`pack_format = 15`）。
-- **`loaderVersion` 勘误**：早期误以为要用 `[4,)`；实测 `--fml.fmlVersion` 是 `47.2.2`，
-  所以 `[47,)` 是对的。
-- **`mods.toml` 依赖字段**：只认 `mandatory = true`，见上面「模组元数据」一节。
