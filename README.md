@@ -22,8 +22,8 @@
 
 | 项目 | 版本 |
 | --- | --- |
-| Minecraft | 1.20.4（`minecraft_version_range=[1.20.4]`） |
-| NeoForge | 20.4.251（loader `4+`） |
+| Minecraft | 26.2（`minecraft_version_range=[26.2]`） |
+| NeoForge | 26.2.0.88（loader `4+`） |
 | 安装端 | **仅客户端** |
 | 许可证 | MIT |
 
@@ -57,7 +57,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 从源码构建
 
-需要 JDK 17。
+需要 JDK 25。
 
 ```bash
 ./gradlew build
@@ -67,7 +67,7 @@ twoHandedItems = ["minecraft:filled_map", "minecraft:shield"]
 
 ### 实现方式
 
-用一个 Mixin 挂在 `FirstPersonHandsAndItemsRenderer#submitArmWithItem` 上（1.20.4 把原来的 `ItemInHandRenderer` 重构成了这个类，参数也从 player 实体改成了 render state）。原版的空手分支是：
+用一个 Mixin 挂在 `FirstPersonHandsAndItemsRenderer#submitArmWithItem` 上（26.2 把原来的 `ItemInHandRenderer` 重构成了这个类，参数也从 player 实体改成了 render state）。原版的空手分支是：
 
 ```java
 if (itemStack.isEmpty()) {
@@ -104,8 +104,8 @@ Special case: **when a map is held in the main hand**, vanilla's main-hand rende
 
 | | |
 | --- | --- |
-| Minecraft | 1.20.4 (`minecraft_version_range=[1.20.4]`) |
-| NeoForge | 20.4.251 (loader `4+`) |
+| Minecraft | 26.2 (`minecraft_version_range=[26.2]`) |
+| NeoForge | 26.2.0.88 (loader `4+`) |
 | Side | **Client only** |
 | License | MIT |
 
@@ -134,7 +134,7 @@ The config file is `config/simpleoffhand-client.toml`. In game, open it from *Mo
 
 ### Building
 
-Requires JDK 17.
+Requires JDK 25.
 
 ```bash
 ./gradlew build
